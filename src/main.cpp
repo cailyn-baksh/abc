@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
 		(",f", po::value<std::vector<std::string>>(), "Options to be passed to the code generator")
 		("help,h", "Show this help message")
 		("output,o", po::value<std::string>(), "Place primary output in the specified file")
+		(",S", "Stop after the first stage of compilation, and output IR")
 		("verbose,v", "Show verbose output")
 		("version", "Print version string")
 		;
