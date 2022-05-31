@@ -41,9 +41,9 @@
  *
  * The following table shows opcodes and what operand types are allowed. r
  * indicates a register, m indicates a memory address, o indicates a
- * pc-relative offset, and i indicates an immediate value. c indicates a
- * condition code.
- *	0	jmp c,rmo
+ * pc-relative offset, c indicates a condition code, and i indicates a
+ * register indirect (dereferences a pointer in a register).
+ *	0	jmp c,rmoi
  *	1	add rmo,rmoi
  *	2	sub rmo,rmoi
  *	3	mul rmo,rmoi
@@ -56,8 +56,8 @@
  *	A	not rmo
  *	B	lsl rmo,rmoi
  *	C	lsr rmo,rmoi
- *	D	mov rmo,rmoi
- *	E	call rmo
+ *	D	mov rmoi,rmoi
+ *	E	call rmoi
  *	F	ret
  *
  * Operand Type Encoding
@@ -66,9 +66,9 @@
  * For instructions with fewer than two arguments, the remaining bits are
  * ignored.
  * 	00	Register
- *	01	Memory Address
- *	10	PC-Relative Offset
- *	11	Immediate value
+ *  01	Register Indirect
+ *	10	Memory Address
+ *	11	PC-Relative Offset
  * 
  * Register encoding
  * Registers are encoded as a three byte sequence.
