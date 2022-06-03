@@ -8,7 +8,7 @@ const char *InvalidInstructionException::what() {
 	return message;
 }
 
-Instruction::Instruction(Opcode opcode) : opcode(opcode) {
+/*Instruction::Instruction(Opcode opcode) : opcode(opcode) {
 
 }
 
@@ -51,4 +51,8 @@ Instruction &Instruction::arg(std::uint8_t o) {
 
 	return *this;
 }
+
+Instruction(Opcode::ADD, )
+*/
+
 

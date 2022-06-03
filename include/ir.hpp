@@ -1,113 +1,6 @@
 #ifndef _IR_HPP_
 #define _IR_HPP_
 
-/*
- * The intermediate representation is a "virtual machine" designed for
- * compiling esoteric langauges. The IR is a cell-based virtual machine.
- *
- * Virtual Machine Description
- * ===========================
- *
- * Memory
- * The virtual machine treats memory as an infinite tape of cells.
- *
- * Registers
- * There are eight registers in the virtual machine. cp is the cell pointer. The
- * rest of the registers are general purpose.
- *  - cp
- *  - r0
- *  - r1
- *  - r2
- *  - r3
- *  - r4
- *  - r5
- *  - r6
- *
- * Flags
- * The special flags register contains bit flags that are set as a result of
- * certain instructions. The flags are Z (zero), N (negative), C (carry), and
- * V (overflow).
- *
- * Instruction Format
- * ==================
- *
- * The IR uses a bytecode to represent IR instructions during compilation.
- * The general format of the IR bytecode is a 1 byte opcode followed by any
- * arguments the opcode requires.
- *
- * The instruction format is generally defined as a four bit instruction,
- * followed by two bits for the first operand/destination and two for the
- * second operand.
- *
- * The following table shows opcodes and what operand types are allowed. r
- * indicates a register, m indicates a memory address, o indicates a
- * pc-relative offset, c indicates a condition code, and i indicates a
- * register indirect (dereferences a pointer in a register).
- *	0	jmp c,rmoi
- *	1	add rmo,rmoi
- *	2	sub rmo,rmoi
- *	3	mul rmo,rmoi
- *	4	div rmo,rmoi
- *	5	cmp rmo,rmoi
- *	6	tst rmo,rmoi
- *	7	and rmo,rmoi
- *	8	or rmo,rmoi
- *	9	xor rmo,rmoi
- *	A	not rmo
- *	B	lsl rmo,rmoi
- *	C	lsr rmo,rmoi
- *	D	mov rmoi,rmoi
- *	E	call rmoi
- *	F	ret
- *
- * Operand Type Encoding
- * The remaining four bytes of the opcode specify the types of the
- * instruction's arguments. Each argument is specified by a two bit sequence.
- * For instructions with fewer than two arguments, the remaining bits are
- * ignored.
- * 	00	Register
- *  01	Register Indirect
- *	10	Memory Address
- *	11	PC-Relative Offset
- * 
- * Register encoding
- * Registers are encoded as a three byte sequence.
- *	000		cp
- *	001		r0
- *	010		r1
- *	011		r2
- *	100		r3
- *	101		r4
- *	110		r5
- *	111		r6
- * Opcodes which specify two register arguments are to be packed into a single
- * byte, with the 2 least significant bits ignored.
- *
- * Memory address encoding
- *
- * PC-Relative Offset Encoding
- * PC-relative offsets are encoded in a single byte. The value of this byte is
- * signed, and is added to the program counter.
- *
- * Immediate encoding
- *
- * Condition Codes
- * Condition codes are represented by a four bit sequence. The most significant
- * bit is the negate bit, which determines whether the condition should be
- * negated at the end of evaluation. The negate bit is true when its value is
- * zero (so that null bytes evaluate to jmp !al,cp which is effectively a nop)
- * The remaining three bytes of the condition code are the actual condition
- *  Code	Condition	Mnemonic	!Condition	Mnemonic
- *	000		1			al			0			-
- *	001		Z			eq	z		!Z			ne	nz
- *	010		C			cs	hs		!C			cc	lo
- *	011		N			mi			!N			pl
- *	100		V			vs			!V			vc
- *	101		C & !Z		hi			!C | Z		ls
- *	110		N = V		ge			N != V		lt
- *	111		N = V & !Z	gt			N != V | Z	le
- */
-
 #include <exception>
 #include <optional>
 #include <variant>
@@ -140,7 +33,7 @@ namespace IR {
 	/*
 	 * Represents a register
 	 */
-	enum class Register {
+	enum Register {
 		CP = 0b000,
 		R0 = 0b001,
 		R1 = 0b010,
@@ -151,7 +44,7 @@ namespace IR {
 		R6 = 0b111
 	};
 
-	enum class Condition {
+	enum Condition {
 		AL = 0b1000, NV = 0b0000,
 		Z  = 0b1001, NZ = 0b0001,
 		CS = 0b1010, CC = 0b0010,
@@ -171,33 +64,58 @@ namespace IR {
 	};
 
 	/*
-	 * Represents an instruction.
+	 * Represents an IR instruction. This class makes use of operator overloading
+	 * to allow it to be used in a format mirroring assembly language.
+	 *
+	 * Some examples of use
+	 *
+	 * add r0,[r1]
+	 * ADD (R0) [R1];
 	 */
 	class Instruction {
-	private:
-		Opcode opcode;
-		std::optional<std::variant<Register, std::uint8_t, Condition>> op1;
-		std::optional<std::variant<Register, std::uint8_t>> op2;
-
 	public:
 		/*
-		 * Creates a new instruction 
+		 * Create a new instruction.
+		 *
+		 * opcode - The opcode of the new instruction.
 		 */
 		Instruction(Opcode opcode);
 
 		/*
-		 * Adds a register argument to the instruction.
+		 * Apply a register argument to an instruction
+		 *
+		 * r - The register
 		 */
-		Instruction &arg(Register r);
+		Instruction &operator()(Register r);
 
 		/*
-		 * Adds a PC-relative offset argument to the instruction.
+		 * Apply a register indirect argument to an instruction
+		 *
+		 * r - The register
 		 */
-		Instruction &arg(std::uint8_t o);
+		Instruction &operator[](Register r);
 
-		Instruction &arg(Condition c);
+		Instruction &operator()(Condition c);
 	};
+
 }
+
+#define IR_JMP	Instruction(Opcode::JMP)
+#define IR_ADD	Instruction(Opcode::ADD)
+#define IR_SUB	Instruction(Opcode::SUB)
+#define IR_MUL	Instruction(Opcode::MUL)
+#define IR_DIV	Instruction(Opcode::DIV)
+#define IR_CMP	Instruction(Opcode::CMP)
+#define IR_TST	Instruction(Opcode::TST)
+#define IR_AND	Instruction(Opcode::AND)
+#define IR_OR	Instruction(Opcode::OR)
+#define IR_XOR	Instruction(Opcode::XOR)
+#define IR_NOT	Instruction(Opcode::NOT)
+#define IR_LSL	Instruction(Opcode::LSL)
+#define IR_LSR	Instruction(Opcode::LSR)
+#define IR_MOV	Instruction(Opcode::MOV)
+#define IR_CALL	Instruction(Opcode::CALL)
+#define IR_RET	Instruction(Opcode::RET)
 
 #endif  // _IR_HPP_
 
