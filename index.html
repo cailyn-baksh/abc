@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Main | ABC Docs</title>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<aside>
+			<div>
+				<iframe src="sidebar.html"></iframe>
+			</div>
+		</aside>
+		<main>
+			<p>
+				This project is a compiler system similar to LLVM, designed with
+				esoteric languages in mind. The system includes a set of
+				"front-ends" for several languages, and “back-ends” for several
+				architectures. It also includes a standard intermediate
+				representation (IR) virtual machine which allows the front ends and
+				back ends to work in tandem without needing to be designed with the
+				other specifically in mind. The general process of compiling is as
+				follows:
+			</p>
+			<ol>
+				<li>
+					A compiler front-end (language) and back-end (architecture) are
+					selected.
+				</li>
+				<li>
+					The front-end performs first-stage compilation to IR
+					<ol>
+						<li>
+							The source file is tokenized by the front-end parser.
+						</li>
+						<li>
+							The front-end performs first-pass optimization on the
+							tokens.
+						</li>
+						<li>
+							The first-stage compiler compiles the optimized tokens
+							into IR.
+						</li>
+					</ol>
+				</li>
+				<li>
+					The optimizer optimizes the IR code in the primary optimization
+					phase.
+				</li>
+				<li>
+					The back-end compiler assembles IR code into machine code
+					<ol>
+						<li>
+							Each IR instruction is replaced with its machine code
+							equivalent.
+						</li>
+						<li>
+							The back-end performs peephole optimization.
+						</li>
+						<li>
+							The resulting machine code is placed into an object
+							file.
+						</li>
+					</ol>
+				</li>
+			</ol>
+		</main>
+	</body>
+</html>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Intermediate Representation | ABC Docs</title>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<aside>
+			<div>
+				<iframe src="sidebar.html"></iframe>
+			</div>
+		</aside>
+		<main>
+			<p>
+				The IR is a pseudo-machine code format designed for a virtual
+				machine which is designed to abstract away the details of
+				specific architectures. It is effectively an
+				architecture-neutral machine code. The IR is an ultra-RISC
+				architecture based on the ARM, x86, and Z80 architectures.
+			</p>
+			<p>
+				Despite being RISC, the IR's addressing modes are more akin to
+				CISC architectures like the x86, instead of the load/store
+				architecture typical of RISC architectures. In other words, all
+				instructions support register direct addressing (like most
+				RISCs), as well as direct, PC-relative, and register indirect
+				addressing. To facilitate compact instruction encoding,
+				immediate values are replaced by literal pools which can be
+				accessed via PC-relative addressing.
+			</p>
+			<p>
+				In total, the architecture has 16 instructions and 8 registers.
+				Seven of these registers are general purpose, and one is a cell
+				pointer. There is no concrete program counter as the
+				architecture provides no direct method to manipulate with the
+				program counter. The flags register, while also not concrete,
+				is defined as having the Zero, Negative (or sign), Overflow,
+				and Carry flags present.
+			</p>
+			<p>
+				The 16 instructions include basic arithmetic (addition,
+				subtraction, multiplication, division), basic logic (not, and,
+				or, exclusive or, logical left shift, logical right shift),
+				two comparison instructions (subtraction comparison and logical
+				AND comparison), a combined load/store instruction, and three
+				flow control instructions. This makes the architecture fully
+				Turing complete and capable of being implemented on all extant
+				CPU architectures.
+			</p>
+			<p>
+				Since this architecture is designed with esoteric languages in
+				mind, memory is treated as a 1-dimensional tape. This is taken
+				from the popular esoteric language Brainfuck, arguably the most
+				popular and well-known esoteric language and one upon which the
+				overwhelming majority of esoteric languages designed since have
+				based their own abstract memory systems on. Since this IR is a
+				layer closer to the hardware than most programming languages
+				(especially most esoteric ones), the memory tape is bounded to
+				a discrete range rather than being infinite in size, however
+				addresses loop around. This means that decrementing the cell
+				pointer below zero will cause it to point to the “top” of
+				memory, and incrementing it past the top will cause it to point
+				to zero. This is a feature which can be optionally disabled in
+				high-performance applications.
+			</p>
+
+			<h2 id="ir-instruction-fmt">IR Instruction Format</h2>
+			<p>
+				IR instructions are incredibly compact, able to be as small as
+				a single byte. Instructions are variable length, starting with
+				an instruction byte which specifies how many bytes follow.
+				<i>Figure 1</i> shows the layout of the instruction byte. The
+				high four bits contain the opcode (<i>Figure 2</i>). The low
+				four bits encode the two operands (<i>Figure 3</i>).
+			</p>
+			<figure>
+				<table class="grid">
+					<thead>
+						<tr>
+							<th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th><th>1</th><th>0</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td colspan="4">Opcode</td>
+							<td>Op1</td>
+							<td colspan="2">Op2</td>
+							<td>Reserved</td>
+						</tr>
+					</tbody>
+				</table>
+				<figcaption>Figure 1: Instruction Byte Layout</figcaption>
+			</figure>
+			<p>
+				For detailed documentation of each opcode, see <a target="_top" href="ir-instructions.html">IR Instructions</a>.
+			</p>
+			<figure>
+				<table class="list">
+					<thead>
+						<tr>
+							<th>Opcode</th>
+							<th>Instruction</th>
+							<th>Opcode</th>
+							<th>Instruction</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th><code>0x0</code></th>
+							<td>Jump</td>
+	
+							<th><code>0x8</code></th>
+							<td>OR</td>
+						</tr>
+						<tr>
+							<th><code>0x1</code></th>
+							<td>Add</td>
+	
+							<th><code>0x9</code></th>
+							<td>XOR</td>
+						</tr>
+						<tr>
+							<th><code>0x2</code></th>
+							<td>Subtract</td>
+	
+							<th><code>0xA</code></th>
+							<td>One's Complement</td>
+						</tr>
+						<tr>
+							<th><code>0x3</code></th>
+							<td>Multiply</td>
+	
+							<th><code>0xB</code></th>
+							<td>Logical Left Shift</td>
+						</tr>
+						<tr>
+							<th><code>0x4</code></th>
+							<td>Divide</td>
+	
+							<th><code>0xC</code></th>
+							<td>Logical Right Shift</td>
+						</tr>
+						<tr>
+							<th><code>0x5</code></th>
+							<td>Compare</td>
+	
+							<th><code>0xD</code></th>
+							<td>Move</td>
+						</tr>
+						<tr>
+							<th><code>0x6</code></th>
+							<td>Test</td>
+	
+							<th><code>0xE</code></th>
+							<td>Call</td>
+						</tr>
+						<tr>
+							<th><code>0x7</code></th>
+							<td>AND</td>
+	
+							<th><code>0xF</code></th>
+							<td>Return</td>
+						</tr>
+					</tbody>
+				</table>
+				<figcaption>Figure 2: Opcodes</figcaption>
+			</figure>
+			<p>
+				The low nybble of the instruction byte encodes the two
+				operands. Operand 1 only uses the first two codes.
+			</p>
+			<figure>
+				<table class="list">
+					<thead>
+						<tr>
+							<th>Code</th>
+							<th>Meaning</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>0b00</code></td>
+							<td>Register</td>
+						</tr>
+						<tr>
+							<td><code>0b01</code></td>
+							<td>Memory Address</td>
+						</tr>
+						<tr>
+							<td><code>0b10</code></td>
+							<td>Register Indirect</td>
+						</tr>
+						<tr>
+							<td><code>0b11</code></td>
+							<td>PC-Relative Offset</td>
+						</tr>
+					</tbody>
+				</table>
+				<figcaption>Figure 3: Operand Type Encoding</figcaption>
+			</figure>
+			<p>
+				After the instruction byte comes a variable number of argument
+				bytes, which contain the values of the arguments. Values in the
+				argument bytes are packed together; the bits appear directly
+				adjacent to one another unless byte alignment is otherwise
+				specified.
+			</p>
+
+			<h3 id="reg-encode">Register Encoding</h3>
+			<p>
+				Register encodings, as shown in <i>Figure 4</i>, are used for
+				both Register and Register Indirect arguments. Registers are
+				encoded in three bit sequences, with no padding.
+			</p>
+			<figure>
+				<table class="list">
+					<thead>
+						<tr>
+							<th>Code</th>
+							<th>Register</th>
+							<th>Code</th>
+							<th>Register</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th><code>0b000</code></th>
+							<td>Cell Pointer</td>
+
+							<th><code>0b100</code></th>
+							<td>R3</td>
+						</tr>
+						<tr>
+							<th><code>0b001</code></th>
+							<td>R0</td>
+
+							<th><code>0b101</code></th>
+							<td>R4</td>
+						</tr>
+						<tr>
+							<th><code>0b010</code></th>
+							<td>R1</td>
+
+							<th><code>0b110</code></th>
+							<td>R5</td>
+						</tr>
+						<tr>
+							<th><code>0b011</code></th>
+							<td>R2</td>
+
+							<th><code>0b111</code></th>
+							<td>R6</td>
+						</tr>
+					</tbody>
+				</table>
+				<figcaption>Figure 4: Register Encodings</figcaption>
+			</figure>
+
+			<h3 id="cond-codes">Condition Codes</h3>
+			<p>
+				Some instructions take condition code arguments. Condition
+				codes are four bytes long in total. The first bit is the negate
+				bit which, if zero, indicates the condition should be negated.
+				The remaining three bits specify the condition. Condition codes
+				have no padding.
+			</p>
+			<figure>
+				<table class="list">
+					<thead>
+						<th>Code</th>
+						<th>Condition</th>
+						<th>Mnemonic</th>
+						<th>Negated Condition</th>
+						<th>Mnemonic</th>
+					</thead>
+					<tbody style="font-family:serif">
+						<tr>
+							<td><code>0b000</code></td>
+							<td>1</td>
+							<td><code>al</code></td>
+							<td>0</td>
+							<td>-</td>
+						</tr>
+						<tr>
+							<td><code>0b001</code></td>
+							<td>Z</td>
+							<td><code>eq</code> <code>z</code></td>
+							<td>&not;Z</td>
+							<td><code>ne</code> <code>nz</code></td>
+						</tr>
+						<tr>
+							<td><code>0b010</code></td>
+							<td>C</td>
+							<td><code>cs</code> <code>hs</code></td>
+							<td>&not;C</td>
+							<td><code>cc</code> <code>lo</code></td>
+						</tr>
+						<tr>
+							<td><code>0b011</code></td>
+							<td>N</td>
+							<td><code>mi</code></td>
+							<td>&not;Z</td>
+							<td><code>pl</code></td>
+						</tr>
+						<tr>
+							<td><code>0b100</code></td>
+							<td>V</td>
+							<td><code>o</code></td>
+							<td>&not;V</td>
+							<td><code>no</code></td>
+						</tr>
+						<tr>
+							<td><code>0b101</code></td>
+							<td>C &and; &not;Z</td>
+							<td><code>hi</code></td>
+							<td>&not;C &or; Z</td>
+							<td><code>ls</code></td>
+						</tr>
+						<tr>
+							<td><code>0b110</code></td>
+							<td>N = V</td>
+							<td><code>ge</code></td>
+							<td>N &ne; V</td>
+							<td><code>lt</code></td>
+						</tr>
+						<tr>
+							<td><code>0b111</code></td>
+							<td>N = V &and; &not;Z</td>
+							<td><code>gt</code></td>
+							<td>N &ne; V &or; Z</td>
+							<td><code>le</code></td>
+						</tr>
+					</tbody>
+				</table>
+				<figcaption>Condition Codes</figcaption>
+			</figure>
+		</main>
+	</body>
+</html>

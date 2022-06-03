@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>IR Instruction Listing | ABCVM Docs</title>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<aside>
+			<div>
+				<iframe src="sidebar.html"></iframe>
+			</div>
+		</aside>
+		<main>
+			<h2 id="jmp"><code>jmp</code>: Jump</h2>
+			<table class="grid">
+				<tbody>
+					<tr>
+						<th>Opcode</th>
+						<td><code>0x0</code></td>
+					</tr>
+					<tr>
+						<th>Op1</th>
+						<td>Unused</td>
+					</tr>
+					<tr>
+						<th>Op2</th>
+						<td>Target</td>
+					</tr>
+				</tbody>
+			</table>
+			<p>
+				The jump instruction sets the program counter. Relative jumps
+				are not supported.
+			</p>
+			<p>
+				<code>jmp</code> does not use the Op1 field. The Op2 field
+				specifies the type of the argument containing the address to
+				jump to. <code>jmp</code> supports all argument types.
+			</p>
+			<p>
+				<code>jmp</code> takes two arguments, a condition code followed
+				by Op2. The jump only goes through if the condition is true.
+			</p>
+			<p>
+				The <code>jmp</code> instruction is designed so that the
+				pseudo-instruction <code>nop</code> can be encoded as two null
+				bytes.
+			</p>
+			<a href="ir.html#cond-codes">See Also.</a>
+
+			<h2 id="add"><code>add</code>: Addition</h2>
+			<table class="grid">
+				<tbody>
+					<tr>
+						<th>Opcode</th>
+						<td><code>0x1</code></td>
+					</tr>
+					<tr>
+						<th>Op1</th>
+						<td>Destination/Augend</td>
+					</tr>
+					<tr>
+						<th>Op2</th>
+						<td>Addend</td>
+					</tr>
+				</tbody>
+			</table>
+			<p>
+				The <code>add</code> instruction performs addition. It adds the
+				Op2 value to Op1 and updates Op1.
+				<br><br>
+				Op1 = Op1 + Op2
+			</p>
+
+			<h2 id="sub"><code>sub</code>: Subtraction</h2>
+			<table class="grid">
+				<tbody>
+					<tr>
+						<th>Opcode</th>
+						<td><code>0x2</code></td>
+					</tr>
+					<tr>
+						<th>Op1</th>
+						<td>Destination/Minuend</td>
+					</tr>
+					<tr>
+						<th>Op2</th>
+						<td>Subtrahend</td>
+					</tr>
+				</tbody>
+			</table>
+			<p>
+				The <code>sub</code> instruction performs subtraction. It
+				subtracts the Op2 value from Op1 and updates Op1.
+				<br><br>
+				Op1 = Op1 - Op2
+			</p>
+
+			<h2 id="mul"><code>mul</code>: Multiplication</h2>
+			<table class="grid">
+				<tbody>
+					<tr>
+						<th>Opcode</th>
+						<td><code>0x3</code></td>
+					</tr>
+					<tr>
+						<th>Op1</th>
+						<td>Destination/Multiplicand</td>
+					</tr>
+					<tr>
+						<th>Op2</th>
+						<td>Multiplier</td>
+					</tr>
+				</tbody>
+			</table>
+			<p>
+				The <code>mul</code> instruction performs multiplication. It
+				multiplies the Op1 value by Op2 and updates Op1.
+				<br><br>
+				Op1 = Op1 &times; Op2
+			</p>
+
+			<h2 id="div"><code>div</code>: Division</h2>
+			<table class="grid">
+				<tbody>
+					<tr>
+						<th>Opcode</th>
+						<td><code>0x4</code></td>
+					</tr>
+					<tr>
+						<th>Op1</th>
+						<td>Destination/Dividend</td>
+					</tr>
+					<tr>
+						<th>Op2</th>
+						<td>Divisor</td>
+					</tr>
+				</tbody>
+			</table>
+			<p>
+				The <code>div</code> instruction performs division. It
+				divides the Op1 value by Op2 and updates Op1.
+				<br><br>
+				Op1 = Op1 &div; Op2
+			</p>
+
+			<h2 id="cmp"><code>cmp</code>: Comparison</h2>
+			<table class="grid">
+				<tbody>
+					<tr>
+						<th>Opcode</th>
+						<td><code>0x5</code></td>
+					</tr>
+					<tr>
+						<th>Op1</th>
+						<td>Left Comparand</td>
+					</tr>
+					<tr>
+						<th>Op2</th>
+						<td>Right Comparand</td>
+					</tr>
+				</tbody>
+			</table>
+			<p>
+				The <code>cmp</code> instruction compares values. It subtracts
+				the Op2 value from Op1, updates Flags, and discards the result.
+			</p>
+
+			<h2 id="tst"><code>tst</code>: Testing</h2>
+			<table class="grid">
+				<tbody>
+					<tr>
+						<th>Opcode</th>
+						<td><code>0x6</code></td>
+					</tr>
+					<tr>
+						<th>Op1</th>
+						<td>Left Comparand</td>
+					</tr>
+					<tr>
+						<th>Op2</th>
+						<td>Right Comparand</td>
+					</tr>
+				</tbody>
+			</table>
+			<p>
+				The <code>tst</code> instruction is another way to compare (or
+				test) values. It performs a bitwise AND between Op1 and Op2,
+				updates Flags, and discards the result.
+			</p>
+
+			<h2 id="and"><code>and</code>: Bitwise AND</h2>
+			<table class="grid">
+				<tbody>
+					<tr>
+						<th>Opcode</th>
+						<td><code>0x7</code></td>
+					</tr>
+					<tr>
+						<th>Op1</th>
+						<td>Left Operand</td>
+					</tr>
+					<tr>
+						<th>Op2</th>
+						<td>Right Operand</td>
+					</tr>
+				</tbody>
+			</table>
+			<p>
+				The <code>and</code> instruction performs bitwise AND. It
+				combines the Op1 and Op2 values by discarding any bits which
+				aren't present in both values, and storing the resulting value
+				in Op1.
+				<br><br>
+
+			</p>
+
+			<h2 id="or"><code>or</code>: Bitwise OR</h2>
+
+			<h2 id="xor"><code>xor</code>: Bitwise XOR</h2>
+
+			<h2 id="cpl"><code>cpl</code>: One's Complement</h2>
+
+			<h2 id="lsl"><code>lsl</code>: Logical Shift Left</h2>
+
+			<h2 id="lsr"><code>lsr</code>: Logical Shift Right</h2>
+
+			<h2 id="mov"><code>mov</code>: Move</h2>
+
+			<h2 id="call"><code>call</code>: Call</h2>
+
+			<h2 id="ret"><code>ret</code>: Return</h2>
+		</main>
+	</body>
+</html>
