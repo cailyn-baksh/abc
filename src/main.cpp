@@ -5,10 +5,11 @@
 
 #include <boost/program_options.hpp>
 
-#include "parser.hpp"
+#include "ir.hpp"
+#include "frontend.hpp"
 
 #define NAME "abc"
-#define VERSION "v0.0.1"
+#define VERSION "v0.0.2"
 
 namespace po = boost::program_options;
 
@@ -22,6 +23,7 @@ int main(int argc, char **argv) {
 		(",S", "Stop after the first stage of compilation, and output IR")
 		("verbose,v", "Show verbose output")
 		("version", "Print version string")
+		("x", po::value<std::string>(), "Select the language")
 		;
 
 	po::positional_options_description positional;
@@ -29,7 +31,7 @@ int main(int argc, char **argv) {
 
 	po::options_description hidden("Hidden Options");
 	hidden.add_options()
-		("input", po::value<std::string>(), "input file");
+		("input", po::value<std::string>(), "input file")
 		;
 
 	po::options_description options;
@@ -57,40 +59,49 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	std::queue<Tokens> tokens = parse(vm["input"].as<std::string>());
+	std::string srcFile = vm["input"].as<std::string>();
+	IFrontend *frontend;
+	//IBackend generator;
 
-	std::cout << "Press enter to view next token. Type q to quit." << std::endl;
-	while (!tokens.empty()) {
-		Tokens t = tokens.front();
-		tokens.pop();
+	// Select front end
+	if (!vm.count("x")) {
+		// Try to infer language from file extension
+		std::size_t extIndex = srcFile.find_last_of('.');
+		std::string fileExt = srcFile.substr(extIndex+1);
 
-		switch (t) {
-			case Tokens::INC:
-				std::cout << "INC";
-				break;
-			case Tokens::DEC:
-				std::cout << "DEC";
-				break;
-			case Tokens::NEXT:
-				std::cout << "NEXT";
-				break;
-			case Tokens::PREV:
-				std::cout << "PREV";
-				break;
-			case Tokens::BEGINLOOP:
-				std::cout << "BEGINLOOP";
-				break;
-			case Tokens::ENDLOOP:
-				std::cout << "ENDLOOP";
-				break;
-			case Tokens::OUT:
-				std::cout << "OUT";
-				break;
-			case Tokens::IN:
-				std::cout << "IN";
-				break;
+		if (fileExt == "bf") {
+			frontend = new BrainfuckFrontend();
+		} else {
+			std::cerr << "Unrecognized file extension ." << fileExt << std::endl;
+			return 1;
 		}
-		if (std::cin.get() == 'q') return 0;
+	} else {
+		std::string language = vm["x"].as<std::string>();
+
+		if (language == "bf" || language == "brainfuck") {
+			frontend = new BrainfuckFrontend();
+		} else {
+			std::cerr << "Unknown language " << language << std::endl;
+			return 1;
+		}
 	}
+
+	if (!vm.count("arch")) {
+		// Target same architecture as this device
+	}
+
+	/*
+	 * Now its time to compile
+	 *
+	 * 1. call the parser
+	 * 2. optimize the IR
+	 * 3. call the code generator
+	 */
+
+	IR::Program prog = frontend->parse(srcFile);
+
+	// optimize()
+
+	delete frontend;
 }
 

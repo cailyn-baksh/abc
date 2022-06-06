@@ -2,32 +2,29 @@
 #define _IR_HPP_
 
 #include <exception>
+#include <initializer_list>
+#include <map>
 #include <optional>
+#include <string>
 #include <variant>
+#include <vector>
 
+#include <cstddef>
 #include <cstdint>
 
 namespace IR {
 	/*
 	 * Represents an opcode
  	 */
-	enum class Opcode {
-		JMP  = 0x0,
-		ADD  = 0x1,
-		SUB  = 0x2,
-		MUL  = 0x3,
-		DIV  = 0x4,
-		CMP  = 0x5,
-		TST  = 0x6,
-		AND  = 0x7,
-		OR   = 0x8,
-		XOR  = 0x9,
-		NOT  = 0xA,
-		LSL  = 0xB,
-		LSR  = 0xC,
-		MOV  = 0xD,
-		CALL = 0xE,
-		RET  = 0xF
+	enum Opcode {
+		JMP	= 0x0,	ADD  = 0x1,
+		SUB	= 0x2,	MUL  = 0x3,
+		DIV	= 0x4,	CMP  = 0x5,
+		TST	= 0x6,	AND  = 0x7,
+		OR	= 0x8,	XOR  = 0x9,
+		CPL	= 0xA,	LSL  = 0xB,
+		LSR	= 0xC,	ASR  = 0xD,
+		MOV	= 0xE,	CALL = 0xF
 	};
 
 	/*
@@ -62,42 +59,94 @@ namespace IR {
 		InvalidInstructionException(const char *msg);
 		const char *what();
 	};
+	
+	struct Operand {
+		enum {
+			REGISTER	= 0b00,
+			ADDR		= 0b01,
+			INDIRECT	= 0b10,
+			PC_RELATIVE	= 0b11
+		} type;
+		std::variant<Register, std::string, std::uint8_t> value;
 
-	/*
-	 * Represents an IR instruction. This class makes use of operator overloading
-	 * to allow it to be used in a format mirroring assembly language.
-	 *
-	 * Some examples of use
-	 *
-	 * add r0,[r1]
-	 * ADD (R0) [R1];
-	 */
-	class Instruction {
-	public:
-		/*
-		 * Create a new instruction.
-		 *
-		 * opcode - The opcode of the new instruction.
-		 */
-		Instruction(Opcode opcode);
-
-		/*
-		 * Apply a register argument to an instruction
-		 *
-		 * r - The register
-		 */
-		Instruction &operator()(Register r);
-
-		/*
-		 * Apply a register indirect argument to an instruction
-		 *
-		 * r - The register
-		 */
-		Instruction &operator[](Register r);
-
-		Instruction &operator()(Condition c);
+		Operand();
+		Operand(Register r);
+		Operand(std::string s);
+		Operand(std::uint8_t o);
 	};
 
+	/*
+	 * Creates a register-indirect operand from a register
+	 */
+	Operand operator*(Register r);
+
+	/*
+	 * Represents an IR Instruction
+	 */
+	class Instruction {
+	private:
+		Opcode opcode;
+		std::optional<Condition> cc;
+		std::optional<Operand> op1;
+		std::optional<Operand> op2;
+
+		bool allowCC = false;
+		bool allowOp1 = false;
+		bool allowOp2 = false;
+
+	public:
+		/*
+		 * Construct a new instruction with one operand
+		 *
+		 * opcode	The opcode of the instruction
+		 * op		The operand
+		 */
+		Instruction(Opcode opcode, Operand op);
+
+		/*
+		 * Construct a new instruction with two operands
+		 *
+		 * opcode	The opcode of the instruction
+		 * op1		The first operand
+		 * op2		The second operand
+		 */
+		Instruction(Opcode opcode, Operand op1, Operand op2);
+
+		/*
+		 * Construct a new instruction with a condition code and an operand
+		 *
+		 * opcode	The opcode of the instruction
+		 * cc		The condition code
+		 * op		The operand
+		 */
+		Instruction(Opcode opcode, Condition cc, Operand op);
+	};
+
+	/*
+	 * Represents an IR program
+	 */
+	class Program {
+	private:
+		std::vector<Instruction> instructions;
+
+		std::map<std::string, std::size_t> symTable;
+
+	public:
+		/*
+		 * Adds a label to the symbol table. The label will point to the next data
+		 * added to the program.
+		 *
+		 * label	The name of the label to add.
+		 */
+		void add_label(std::string label);
+
+		/*
+		 * Appends an instruction to the program.
+		 *
+		 * instruction	The instruction to add.
+		 */
+		void push_instructions(std::initializer_list<Instruction> instructions);
+	};
 }
 
 #define IR_JMP	Instruction(Opcode::JMP)
