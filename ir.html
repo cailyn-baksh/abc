@@ -22,14 +22,24 @@
 				architecture based on the ARM, x86, and Z80 architectures.
 			</p>
 			<p>
-				Despite being RISC, the IR's addressing modes are more akin to
-				CISC architectures like the x86, instead of the load/store
-				architecture typical of RISC architectures. In other words, all
-				instructions support register direct addressing (like most
-				RISCs), as well as direct, PC-relative, and register indirect
-				addressing. To facilitate compact instruction encoding,
-				immediate values are replaced by literal pools which can be
-				accessed via PC-relative addressing.
+				Despite being RISC, the IR provides addressing modes more like
+				CISC architectures, albeit somewhat more limited. Registers and
+				indirected registers may both be read from and written to, and
+				memory addresses and PC-relative offsets can be read from by
+				all instructions.
+			</p>
+			<p>
+				Although the specifics are up to the frontends generating the
+				IR, the general idea is for literals to be encoded as literal
+				pools which are referenced using PC-relative offsets. Short
+				jumps (within 32768 bytes) can be encoded as jumps to a
+				PC-relative offset, and longer jumps can be encoded as a 31-bit
+				offset from the beginning of the program. There are no
+				provisions to enable programs larger than 2147483648 bytes.
+				External symbols are encoded as immediate strings in the IR, to
+				be dealt with by the backend or linker. Memory addresses, while
+				not directly dereferencable, can be loaded into a register and
+				then dereferenced.
 			</p>
 			<p>
 				In total, the architecture has 16 instructions and 8 registers.
@@ -38,17 +48,9 @@
 				architecture provides no direct method to manipulate with the
 				program counter. The flags register, while also not concrete,
 				is defined as having the Zero, Negative (or sign), Overflow,
-				and Carry flags present.
-			</p>
-			<p>
-				The 16 instructions include basic arithmetic (addition,
-				subtraction, multiplication, division), basic logic (not, and,
-				or, exclusive or, logical left shift, logical right shift),
-				two comparison instructions (subtraction comparison and logical
-				AND comparison), a combined load/store instruction, and three
-				flow control instructions. This makes the architecture fully
-				Turing complete and capable of being implemented on all extant
-				CPU architectures.
+				and Carry flags present. This architecture is fully Turing
+				complete and is theoretically capable of being implemented on
+				all extant CPU architectures.
 			</p>
 			<p>
 				Since this architecture is designed with esoteric languages in
@@ -171,14 +173,22 @@
 				<figcaption>Figure 2: Opcodes</figcaption>
 			</figure>
 			<p>
-				The low nybble of the instruction byte encodes the two
-				operands. Operand 1 only uses the first two codes.
+				The low nybble of the instruction byte encodes the two operands
+				Operand 1 only uses the first operand two codes.
+			</p>
+			<p>
+				A register parameter affects the value stored in a register. A
+				register indirect dereferences an address stored in a register.
+				A memory address parameter uses a memory address. Memory
+				addresses cannot be dereferenced directly, and must be loaded
+				into registers to access their values. PC-relative offsets
 			</p>
 			<figure>
 				<table class="list">
 					<thead>
 						<tr>
 							<th>Code</th>
+							<th>Type</th>
 							<th>Meaning</th>
 						</tr>
 					</thead>
@@ -186,18 +196,38 @@
 						<tr>
 							<td><code>0b00</code></td>
 							<td>Register</td>
+							<td style="text-align: left;">
+								A value stored in a register.
+							</td>
 						</tr>
 						<tr>
 							<td><code>0b01</code></td>
-							<td>Memory Address</td>
+							<td>Register Indirect</td>
+							<td style="text-align: left;">
+								Dereferences a memory address stored in a
+								register.
+							</td>
 						</tr>
 						<tr>
 							<td><code>0b10</code></td>
-							<td>Register Indirect</td>
+							<td>Memory Address</td>
+							<td style="text-align: left;">
+								Either a signed 31-bit absolute offset from the
+								beginning of the program, or a null terminated
+								string. Absolute offsets begin with a set bit
+								(total length is 32 bits). Strings indicate an
+								external symbol that to be resolved at link
+								time.
+							</td>
 						</tr>
 						<tr>
 							<td><code>0b11</code></td>
 							<td>PC-Relative Offset</td>
+							<td style="text-align: left;">
+								A read only value stored at a fixed signed
+								16-bit offset from the beginning of the
+								instruction.
+							</td>
 						</tr>
 					</tbody>
 				</table>
@@ -215,7 +245,11 @@
 			<p>
 				Register encodings, as shown in <i>Figure 4</i>, are used for
 				both Register and Register Indirect arguments. Registers are
-				encoded in three bit sequences, with no padding.
+				encoded in three bit sequences, with no padding. The two
+				special registers are <code>AR</code> (the Address Register)
+				and <code>LR</code> (the Link Register). These names are just
+				suggestions and they can also be used as numbered general
+				registers.
 			</p>
 			<figure>
 				<table class="list">
@@ -230,31 +264,31 @@
 					<tbody>
 						<tr>
 							<th><code>0b000</code></th>
-							<td>Cell Pointer</td>
-
-							<th><code>0b100</code></th>
-							<td>R3</td>
-						</tr>
-						<tr>
-							<th><code>0b001</code></th>
 							<td>R0</td>
 
-							<th><code>0b101</code></th>
+							<th><code>0b100</code></th>
 							<td>R4</td>
 						</tr>
 						<tr>
-							<th><code>0b010</code></th>
+							<th><code>0b001</code></th>
 							<td>R1</td>
 
-							<th><code>0b110</code></th>
+							<th><code>0b101</code></th>
 							<td>R5</td>
 						</tr>
 						<tr>
-							<th><code>0b011</code></th>
+							<th><code>0b010</code></th>
 							<td>R2</td>
 
+							<th><code>0b110</code></th>
+							<td>R6 / AR</td>
+						</tr>
+						<tr>
+							<th><code>0b011</code></th>
+							<td>R3</td>
+
 							<th><code>0b111</code></th>
-							<td>Link Register</td>
+							<td>R7 / LR</td>
 						</tr>
 					</tbody>
 				</table>
