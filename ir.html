@@ -95,7 +95,9 @@
 				<figcaption>Figure 1: Instruction Byte Layout</figcaption>
 			</figure>
 			<p>
-				For detailed documentation of each opcode, see <a target="_top" href="ir-instructions.html">IR Instructions</a>.
+				For detailed documentation of each opcode, as well as suggested
+				pseudo-instructions that make up for otherwise missing
+				instructions, see <a target="_top" href="ir-instructions.html">IR Instructions</a>.
 			</p>
 			<figure>
 				<table class="list">
@@ -148,21 +150,21 @@
 							<td>Compare</td>
 	
 							<th><code>0xD</code></th>
-							<td>Move</td>
+							<td>Arithmetic Right Shift</td>
 						</tr>
 						<tr>
 							<th><code>0x6</code></th>
 							<td>Test</td>
 	
 							<th><code>0xE</code></th>
-							<td>Call</td>
+							<td>Move</td>
 						</tr>
 						<tr>
 							<th><code>0x7</code></th>
 							<td>AND</td>
 	
 							<th><code>0xF</code></th>
-							<td>Return</td>
+							<td>Call</td>
 						</tr>
 					</tbody>
 				</table>
@@ -252,7 +254,7 @@
 							<td>R2</td>
 
 							<th><code>0b111</code></th>
-							<td>R6</td>
+							<td>Link Register</td>
 						</tr>
 					</tbody>
 				</table>

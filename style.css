@@ -36,7 +36,7 @@ aside iframe {
 	border-right: 1px solid black;
 }
 
-main p {
+main p:not(.no-indent) {
 	text-indent: 1em;
 }
 
@@ -48,7 +48,14 @@ th, td {
 	padding: 3px 8px;
 
 	text-align: center;
+}
 
+table.striped tr:nth-child(even) {
+	background-color: #ddd;
+}
+
+table:not(.slim) tr:not(.slim) th:not(.slim),
+table:not(.slim) tr:not(.slim) td:not(.slim) {
 	min-width: 2.5vw;
 }
 
@@ -59,16 +66,6 @@ table.grid td {
 
 table.list thead {
 	border-bottom: 1px solid black;
-}
-
-table.list td:first-child,
-table.list th:first-child {
-	padding-left: 25px;
-}
-
-table.list td:last-child,
-table.list th:last-child {
-	padding-right: 25px;
 }
 
 figcaption {

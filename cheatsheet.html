@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>IR Cheatsheet | ABCVM Docs</title>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<link rel="stylesheet" href="style.css" />
+
+		<style>
+			main {
+				max-width: unset;
+			}
+
+			/* table {
+				display: inline;
+				padding: 10px;
+			} */
+
+			main div {
+				display: inline-block;
+				vertical-align: top;
+			}
+
+			table {
+				margin: 5px;
+			}
+		</style>
+	</head>
+	<body>
+		<aside>
+			<div>
+				<iframe src="sidebar.html"></iframe>
+			</div>
+		</aside>
+		<main>
+			<div>
+				<table class="list striped" style="max-width: 20vw;">
+					<thead>
+						<tr>
+							<th colspan="2">Legend</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>cc</td>
+							<td>Condition</td>
+						</tr>
+						<tr>
+							<td>op1</td>
+							<td>
+								Operand 1. Either a register or memory address
+							</td>
+						</tr>
+						<tr>
+							<td>op2</td>
+							<td>
+								Operand 2. May be a register, memory address,
+								register indirect (pointer dereference), or
+								PC-relative offset.
+							</td>
+						</tr>
+						<tr>
+							<td>-</td>
+							<td>In Flags field, flag unaffected</td>
+						</tr>
+						<tr>
+							<td>?</td>
+							<td>In Flags field, flag undefined</td>
+						</tr>
+						<tr>
+							<td>*</td>
+							<td>In Flags field, flag modified</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<table class="grid" style="display:inline">
+					<thead>
+						<tr>
+							<th>Register</th>
+							<th>Purpose</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>CP</code></td>
+							<td>Cell Pointer</td>
+						</tr>
+						<tr>
+							<td><code>R0</code></td>
+							<td rowspan="6">General</td>
+						</tr>
+						<tr>
+							<td><code>R1</code></td>
+						</tr>
+						<tr>
+							<td><code>R2</code></td>
+						</tr>
+						<tr>
+							<td><code>R3</code></td>
+						</tr>
+						<tr>
+							<td><code>R4</code></td>
+						</tr>
+						<tr>
+							<td><code>R5</code></td>
+						</tr>
+						<tr>
+							<td><code>LR</code></td>
+							<td>Link Register</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<div>
+					<table class="grid" style="display:inline">
+						<thead>
+							<tr>
+								<th colspan="2">Pseudo-instructions</th>
+							</tr>
+							<tr>
+								<th>Instruction</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>nop</code></td>
+								<td>Does nothing</td>
+							</tr>
+							<tr>
+								<td><code>ret</code></td>
+								<td>PC = LR</td>
+							</tr>
+						</tbody>
+					</table>
+	
+					<table class="grid" style="max-width: 10vw;">
+						<thead>
+							<tr>
+								<th colspan="2">Special Registers</th>
+							</tr>
+							<tr>
+								<th>Register</th>
+								<th>Definition</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>PC</td>
+								<td>Program Counter</td>
+							</tr>
+							<tr>
+								<td>Flags</td>
+								<td>
+									Has ZNCV flags.
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<div>
+				<table class="grid">
+					<thead>
+						<tr>
+							<th rowspan="2">Opcode</th>
+							<th rowspan="2">Instruction</th>
+							<th rowspan="2">Operation</th>
+							<th colspan="4">Flags</th>
+						</tr>
+						<tr class="slim">
+							<th>Z</th>
+							<th>N</th>
+							<th>C</th>
+							<th>V</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>0x0</code></td>
+							<td><code>jmp <i>cc</i>,<i>op2</i></code></td>
+							<td>if (<i>cc</i>) PC = <i>op2</i></td>
+							<td class="slim">-</td>
+							<td class="slim">-</td>
+							<td class="slim">-</td>
+							<td class="slim">-</td>
+						</tr>
+						<tr>
+							<td><code>0x1</code></td>
+							<td><code>add <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> = <i>op1</i> + <i>op2</i></td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+						</tr>
+						<tr>
+							<td><code>0x2</code></td>
+							<td><code>sub <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> = <i>op1</i> - <i>op2</i></td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+						</tr>
+						<tr>
+							<td><code>0x3</code></td>
+							<td><code>mul <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> = <i>op1</i> &times; <i>op2</i></td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">?</td>
+							<td class="slim">*</td>
+						</tr>
+						<tr>
+							<td><code>0x4</code></td>
+							<td><code>div <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> = <i>op1</i> &div; <i>op2</i></td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">?</td>
+							<td class="slim">?</td>
+						</tr>
+						<tr>
+							<td><code>0x5</code></td>
+							<td><code>cmp <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> - <i>op2</i></td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+						</tr>
+						<tr>
+							<td><code>0x6</code></td>
+							<td><code>tst <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> &and; <i>op2</i></td>
+							<td class="slim">*</td>
+							<td class="slim">?</td>
+							<td class="slim">?</td>
+							<td class="slim">?</td>
+						</tr>
+						<tr>
+							<td><code>0x7</code></td>
+							<td><code>and <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> = <i>op1</i> &and; <i>op2</i></td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">?</td>
+							<td class="slim">?</td>
+						</tr>
+						<tr>
+							<td><code>0x8</code></td>
+							<td><code>or <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> = <i>op1</i> &or; <i>op2</i></td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">?</td>
+							<td class="slim">?</td>
+						</tr>
+						<tr>
+							<td><code>0x9</code></td>
+							<td><code>xor <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> = <i>op1</i> &oplus; <i>op2</i></td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">?</td>
+							<td class="slim">?</td>
+						</tr>
+						<tr>
+							<td><code>0xA</code></td>
+							<td><code>cpl <i>op1</i></code></td>
+							<td><i>op1</i> = ~<i>op1</i></td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">?</td>
+							<td class="slim">?</td>
+						</tr>
+						<tr>
+							<td><code>0xB</code></td>
+							<td><code>lsl <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> = <i>op1</i> &lt;&lt; <i>op2</i></td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">MSB</td>
+							<td class="slim">?</td>
+						</tr>
+						<tr>
+							<td><code>0xC</code></td>
+							<td><code>lsr <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> = <i>op1</i> &gt;&gt; <i>op2</i></td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">LSB</td>
+							<td class="slim">?</td>
+						</tr>
+						<tr>
+							<td><code>0xD</code></td>
+							<td><code>asr <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> = <i>op1</i> <span style="text-decoration:overline">&gt;&gt;</span> <i>op2</i></td>
+							<td class="slim">*</td>
+							<td class="slim">*</td>
+							<td class="slim">LSB</td>
+							<td class="slim">?</td>
+						</tr>
+						<tr>
+							<td><code>0xE</code></td>
+							<td><code>mov <i>op1</i>,<i>op2</i></code></td>
+							<td><i>op1</i> = <i>op2</i></td>
+							<td class="slim">-</td>
+							<td class="slim">-</td>
+							<td class="slim">-</td>
+							<td class="slim">-</td>
+						</tr>
+						<tr>
+							<td><code>0xF</code></td>
+							<td><code>call <i>op2</i></code></td>
+							<td>LR = PC; PC = <i>op2</i></td>
+							<td class="slim">-</td>
+							<td class="slim">-</td>
+							<td class="slim">-</td>
+							<td class="slim">-</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div>
+				<table class="grid">
+					<thead>
+						<tr>
+							<th colspan="3">Condition Codes</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>al</code></td>
+							<td>Always (default)</td>
+							<td>1</td>
+						</tr>
+						<tr>
+							<td><code>eq</code> / <code>z</code></td>
+							<td>Equal / Zero Flag Set</td>
+							<td>Z</td>
+						</tr>
+						<tr>
+							<td><code>ne</code> / <code>nz</code></td>
+							<td>Not Equal / Zero Flag Clear</td>
+							<td>!Z</td>
+						</tr>
+						<tr>
+							<td><code>cs</code> / <code>hs</code></td>
+							<td>Carry Set / Unsigned Higher or Same</td>
+							<td>C</td>
+						</tr>
+						<tr>
+							<td><code>cc</code> / <code>lo</code></td>
+							<td>Carry Clear / Unsigned Lower</td>
+							<td>!C</td>
+						</tr>
+						<tr>
+							<td><code>mi</code></td>
+							<td>Minus</td>
+							<td>N</td>
+						</tr>
+						<tr>
+							<td><code>pl</code></td>
+							<td>Plus</td>
+							<td>!N</td>
+						</tr>
+						<tr>
+							<td><code>o</code></td>
+							<td>Overflow</td>
+							<td>V</td>
+						</tr>
+						<tr>
+							<td><code>no</code></td>
+							<td>No Overflow</td>
+							<td>!V</td>
+						</tr>
+						<tr>
+							<td><code>hi</code></td>
+							<td>Unsigned Higher</td>
+							<td>C & !Z</td>
+						</tr>
+						<tr>
+							<td><code>ls</code></td>
+							<td>Unsigned Lower or Same</td>
+							<td>!C | Z</td>
+						</tr>
+						<tr>
+							<td><code>ge</code></td>
+							<td>Signed Greater or Equal</td>
+							<td>N = V</td>
+						</tr>
+						<tr>
+							<td><code>lt</code></td>
+							<td>Signed Less Than</td>
+							<td>N != V</td>
+						</tr>
+						<tr>
+							<td><code>gt</code></td>
+							<td>Signed Greater Than</td>
+							<td>N = V & !Z</td>
+						</tr>
+						<tr>
+							<td><code>le</code></td>
+							<td>Signed Lesser or Equal</td>
+							<td>N != V | Z</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div>
+				<table class="list striped">
+					<thead>
+						<tr>
+							<th>Flag</th>
+							<th>Meaning</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>Z</td>
+							<td>Zero Flag</td>
+						</tr>
+						<tr>
+							<td>N</td>
+							<td>Negative (Sign) Flag</td>
+						</tr>
+						<tr>
+							<td>C</td>
+							<td>Carry Flag</td>
+						</tr>
+						<tr>
+							<td>V</td>
+							<td>Overflow Flag</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</main>
+	</body>
+</html>
