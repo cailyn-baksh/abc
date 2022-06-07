@@ -7,7 +7,7 @@
 #include "frontend.hpp"
 #include "ir.hpp"
 
-IR::Program BrainfuckFrontend::parse(std::string file) {
+IR::Program BrainfuckFrontend::parse(std::string &file) {
 	std::ifstream in(file);
 	IR::Program program;
 
