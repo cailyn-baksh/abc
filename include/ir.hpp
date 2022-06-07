@@ -1,30 +1,54 @@
 #ifndef _IR_HPP_
 #define _IR_HPP_
 
-#include <exception>
-#include <initializer_list>
 #include <map>
 #include <optional>
 #include <string>
 #include <variant>
 #include <vector>
 
-#include <cstddef>
 #include <cstdint>
 
+/*
+ * Using the IR
+ *
+ * The IR works similarly to an assembly language. An instance of Program is
+ * created, and labels and instructions are added to the program.
+ *
+ * A program like
+ *
+ * main:
+ *   mov r0,[r1]
+ *   add r0,1
+ *   mov [r1],r0
+ *
+ * Would be implemented like this
+ *
+ * Program prog;
+ * prog.label("main");
+ * prog (MOV) (R0)[R1];
+ * prog (ADD) (R0)(1);
+ * prog (MOV) [R1](R0);
+ */
+
 namespace IR {
-	/*
-	 * Represents an opcode
- 	 */
+	class InvalidInstructionException : public std::exception {
+	private:
+		const char *message;
+	public:
+		InvalidInstructionException(const char *msg);
+		const char *what();
+	};
+
 	enum Opcode {
-		JMP	= 0x0,	ADD  = 0x1,
-		SUB	= 0x2,	MUL  = 0x3,
-		DIV	= 0x4,	CMP  = 0x5,
-		TST	= 0x6,	AND  = 0x7,
-		OR	= 0x8,	XOR  = 0x9,
-		CPL	= 0xA,	LSL  = 0xB,
-		LSR	= 0xC,	ASR  = 0xD,
-		MOV	= 0xE,	CALL = 0xF
+		JMP	= 0x0,	ADD = 0x1,
+		SUB = 0x2,	MUL = 0x3,
+		DIV = 0x4,	CMP = 0x5,
+		TST = 0x6,	AND = 0x7,
+		OR	= 0x8,	XOR = 0x9,
+		CPL = 0xA,	LSL = 0xB,
+		LSR = 0xC,	ASR = 0xD,
+		MOV = 0xE, CALL = 0xF
 	};
 
 	/*
@@ -40,7 +64,7 @@ namespace IR {
 		R5 = 0b110,
 		R6 = 0b111
 	};
-
+	
 	enum Condition {
 		AL = 0b1000, NV = 0b0000,
 		Z  = 0b1001, NZ = 0b0001,
@@ -52,14 +76,6 @@ namespace IR {
 		GT = 0b1111, LE = 0b0111
 	};
 
-	class InvalidInstructionException : public std::exception {
-	private:
-		const char *message;
-	public:
-		InvalidInstructionException(const char *msg);
-		const char *what();
-	};
-	
 	struct Operand {
 		enum {
 			REGISTER	= 0b00,
@@ -75,96 +91,74 @@ namespace IR {
 		Operand(std::uint8_t o);
 	};
 
-	/*
-	 * Creates a register-indirect operand from a register
-	 */
-	Operand operator*(Register r);
-
-	/*
-	 * Represents an IR Instruction
-	 */
 	class Instruction {
+		friend class _InstructionPtr;
+
 	private:
 		Opcode opcode;
+
 		std::optional<Condition> cc;
 		std::optional<Operand> op1;
 		std::optional<Operand> op2;
 
-		bool allowCC = false;
-		bool allowOp1 = false;
-		bool allowOp2 = false;
+		bool useCC = false;
+		bool useOp1 = false;
+		bool useOp2 = false;
+
+	public:
+		Instruction(Opcode opcode);
+	};
+
+	class _InstructionPtr {
+		friend class Program;
+
+	private:
+		Instruction *ptr;
+
+		_InstructionPtr(Instruction *i);
 
 	public:
 		/*
-		 * Construct a new instruction with one operand
-		 *
-		 * opcode	The opcode of the instruction
-		 * op		The operand
+		 * Add a register argument to the instruction
 		 */
-		Instruction(Opcode opcode, Operand op);
+		_InstructionPtr &operator()(Register reg);
 
 		/*
-		 * Construct a new instruction with two operands
-		 *
-		 * opcode	The opcode of the instruction
-		 * op1		The first operand
-		 * op2		The second operand
+		 * Adds a register indirect argument to the instruction
 		 */
-		Instruction(Opcode opcode, Operand op1, Operand op2);
+		_InstructionPtr &operator[](Register reg);
 
 		/*
-		 * Construct a new instruction with a condition code and an operand
-		 *
-		 * opcode	The opcode of the instruction
-		 * cc		The condition code
-		 * op		The operand
+		 * Add a symbol argument
 		 */
-		Instruction(Opcode opcode, Condition cc, Operand op);
+		_InstructionPtr &operator()(std::string sym);
+
+		/*
+		 * Add a pc-relative offset argument
+		 */
+		_InstructionPtr &operator()(std::uint8_t off);
 	};
 
-	/*
-	 * Represents an IR program
-	 */
 	class Program {
 	private:
-		std::vector<Instruction> instructions;
-
+		std::vector<Instruction *> instructions;
 		std::map<std::string, std::size_t> symTable;
 
 	public:
 		/*
-		 * Adds a label to the symbol table. The label will point to the next data
-		 * added to the program.
-		 *
-		 * label	The name of the label to add.
+		 * Add a label to the program
 		 */
-		void add_label(std::string label);
+		void label(std::string lbl);
 
 		/*
-		 * Appends an instruction to the program.
-		 *
-		 * instruction	The instruction to add.
+		 * Add an instruction with the given opcode to the program. The return value
+		 * of this operator is only valid until the next call.
 		 */
-		void push_instructions(std::initializer_list<Instruction> instructions);
+		_InstructionPtr operator()(Opcode opcode);
+
+		~Program();
 	};
 }
-
-#define IR_JMP	Instruction(Opcode::JMP)
-#define IR_ADD	Instruction(Opcode::ADD)
-#define IR_SUB	Instruction(Opcode::SUB)
-#define IR_MUL	Instruction(Opcode::MUL)
-#define IR_DIV	Instruction(Opcode::DIV)
-#define IR_CMP	Instruction(Opcode::CMP)
-#define IR_TST	Instruction(Opcode::TST)
-#define IR_AND	Instruction(Opcode::AND)
-#define IR_OR	Instruction(Opcode::OR)
-#define IR_XOR	Instruction(Opcode::XOR)
-#define IR_NOT	Instruction(Opcode::NOT)
-#define IR_LSL	Instruction(Opcode::LSL)
-#define IR_LSR	Instruction(Opcode::LSR)
-#define IR_MOV	Instruction(Opcode::MOV)
-#define IR_CALL	Instruction(Opcode::CALL)
-#define IR_RET	Instruction(Opcode::RET)
 
 #endif  // _IR_HPP_
 

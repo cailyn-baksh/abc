@@ -16,12 +16,12 @@ IR::Program BrainfuckFrontend::parse(std::string &file) {
 	}
 
 	// Set up program
-	program.add_label("main");
-	program.push_instructions({IR::Instruction(IR::MOV, IR::R0, 1)});  // mov r1,1
+	program.label("main");
+	program (IR::MOV) (IR::R1)(1);
 
 	char c;
 	while (in.get(c)) {
-		switch (c) {
+		/*switch (c) {
 			case '+':
 				// add r0,r1
 				program.push_instructions({IR::Instruction(IR::ADD, IR::R0, IR::R1)});
@@ -55,6 +55,6 @@ IR::Program BrainfuckFrontend::parse(std::string &file) {
 			case ',':
 				// call getc
 				break;
-		}
+		}*/
 	}
 }
