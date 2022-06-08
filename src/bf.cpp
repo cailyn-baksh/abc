@@ -7,6 +7,10 @@
 #include "frontend.hpp"
 #include "ir.hpp"
 
+void BrainfuckFrontend::applyOptions(char option, std::vector<std::string> &values) {
+
+}
+
 IR::Program BrainfuckFrontend::parse(std::string &file) {
 	std::ifstream in(file);
 	IR::Program program;
@@ -57,4 +61,15 @@ IR::Program BrainfuckFrontend::parse(std::string &file) {
 				break;
 		}*/
 	}
+
+	return program;
+}
+
+
+std::string BrainfuckFrontend::helpStr() {
+	return "";
+}
+
+void BrainfuckFrontend::setVerbosity(bool verbosity) {
+
 }

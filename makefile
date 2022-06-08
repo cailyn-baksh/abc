@@ -10,15 +10,17 @@ CXXFLAGS = -std=gnu++20 -O3 -Wall $(addprefix -I,$(INCLUDES))
 build: $(OBJS)
 	g++ -Wl,-rpath='$$ORIGIN' -o bin/$(NAME) $^ $(addprefix -l,$(LIBS))
 
-bin/%.c.o: src/%.c
+bin/%.c.o: src/%.c | bin
 	gcc $(CFLAGS) -c -o $@ $^
 
-bin/%.cpp.o: src/%.cpp
+bin/%.cpp.o: src/%.cpp | bin
 	g++ $(CXXFLAGS) -c -o $@ $^
+
+bin:
+	mkdir -p $@
 
 clean:
 	find bin/* \! \( -iname "*.so.*" -o -iname "*.so" \) -type f -delete
 
 .PHONY: build clean FORCE
 FORCE:
-

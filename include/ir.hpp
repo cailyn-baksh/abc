@@ -32,14 +32,29 @@
  */
 
 namespace IR {
+	/*
+	 * Thrown when an IR instruction is configured incorrectly.
+	 */
 	class InvalidInstructionException : public std::exception {
 	private:
 		const char *message;
 	public:
+		/*
+		 * Construct a new InvalidInstructionException with a message
+		 *
+		 * msg	A message explaining this exception.
+		 */
 		InvalidInstructionException(const char *msg);
+
+		/*
+		 * Returns the message of the exception.
+		 */
 		const char *what();
 	};
 
+	/*
+	 * IR opcodes
+	 */
 	enum Opcode {
 		JMP	= 0x0,	ADD = 0x1,
 		SUB = 0x2,	MUL = 0x3,
@@ -52,19 +67,26 @@ namespace IR {
 	};
 
 	/*
-	 * Represents a register
+	 * IR registers
 	 */
 	enum Register {
-		CP = 0b000,
-		R0 = 0b001,
-		R1 = 0b010,
-		R2 = 0b011,
-		R3 = 0b100,
-		R4 = 0b101,
-		R5 = 0b110,
-		R6 = 0b111
+		R0 = 0b000,
+		R1 = 0b001,
+		R2 = 0b010,
+		R3 = 0b011,
+		R4 = 0b100,
+		R5 = 0b101,
+		R6 = 0b110,
+		R7 = 0b111
 	};
-	
+	// Alternate register names
+	const Register AR = R6;
+	const Register LR = R7;
+
+	/*
+	 * IR conditions. The NV condition is added to represent the never
+	 * condition (referred to as !always in the docs).
+	 */
 	enum Condition {
 		AL = 0b1000, NV = 0b0000,
 		Z  = 0b1001, NZ = 0b0001,
@@ -76,28 +98,66 @@ namespace IR {
 		GT = 0b1111, LE = 0b0111
 	};
 
+	/*
+	 * An instruction operand. This type differs from the actual encoding of
+	 * the instruction operands. This struct can represent registers, register
+	 * indirects, symbols, and literals. It is up to the code generator to
+	 * decide how to actually encode these operand values in IR code.
+	 */
 	struct Operand {
 		enum {
-			REGISTER	= 0b00,
-			ADDR		= 0b01,
-			INDIRECT	= 0b10,
-			PC_RELATIVE	= 0b11
+			REGISTER,
+			INDIRECT,
+			SYMBOL,
+			LITERAL
 		} type;
-		std::variant<Register, std::string, std::uint8_t> value;
+		std::variant<Register, std::string, std::uintmax_t> value;
 
+		/*
+		 * Construct a new operand. This constructor does nothing; if you use
+		 * it you must initialize the struct values yourself.
+		 */
 		Operand();
-		Operand(Register r);
-		Operand(std::string s);
-		Operand(std::uint8_t o);
+
+		/*
+		 * Construct a new register operand. This is not and cannot be a
+		 * register indirect.
+		 *
+		 * reg	The register named in this operand.
+		 */
+		Operand(Register reg);
+
+		/*
+		 * Construct a new symbol operand. A symbol is a string which can
+		 * either be a label, which is resolved by the compiler backend, or an
+		 * external symbol which is resolved by the linker.
+		 *
+		 * sym	The name of the symbol
+		 */
+		Operand(std::string sym);
+
+		/*
+		 * An literal integer value.
+		 *
+		 * lit	The value
+		 */
+		Operand(std::uintmax_t lit);
 	};
 
+	/*
+	 * Represents an instruction in the IR. This representation is an
+	 * abstraction of the actual bytecode representation; it is meant to store
+	 * the instructions' data until it is time to assemble the instructions
+	 * into IR code to pass to the next phase in the pipeline.
+	 */
 	class Instruction {
 		friend class _InstructionPtr;
+		friend class Program;
 
 	private:
 		Opcode opcode;
 
-		std::optional<Condition> cc;
+		Condition cc = AL;
 		std::optional<Operand> op1;
 		std::optional<Operand> op2;
 
@@ -106,39 +166,68 @@ namespace IR {
 		bool useOp2 = false;
 
 	public:
+		/*
+		 * Construct a new instruction with the given opcode
+		 */
 		Instruction(Opcode opcode);
 	};
 
+	/*
+	 * A helper class for Instruction and Program. This class is not meant to
+	 * be instantiated by the programmer. It is returned by members of Program
+	 * as a pointer to Instructions within that Program instance, and provides
+	 * functions and operators that can be used to manipulate that Instruction
+	 * within the Program.
+	 */
 	class _InstructionPtr {
 		friend class Program;
 
 	private:
 		Instruction *ptr;
 
+		/*
+		 * Construct a new _InstructionPtr that points to Instruction i
+		 */
 		_InstructionPtr(Instruction *i);
 
 	public:
 		/*
 		 * Add a register argument to the instruction
+		 *
+		 * reg	The register argument to add
+		 * Returns a reference to this
 		 */
 		_InstructionPtr &operator()(Register reg);
 
 		/*
 		 * Adds a register indirect argument to the instruction
+		 *
+		 * reg	The register indirect argument to add
+		 * Returns a reference to this
 		 */
 		_InstructionPtr &operator[](Register reg);
 
 		/*
 		 * Add a symbol argument
+		 *
+		 * sym	The symbol argument to add
+		 * Returns a reference to this
 		 */
 		_InstructionPtr &operator()(std::string sym);
 
 		/*
-		 * Add a pc-relative offset argument
+		 * Add a integer literal argument
+		 *
+		 * lit	The literal argument to add
+		 * Returns a reference to this
 		 */
-		_InstructionPtr &operator()(std::uint8_t off);
+		_InstructionPtr &operator()(std::uintmax_t lit);
 	};
 
+	/*
+	 * An abstract representation of an IR program. This class provides an
+	 * assembly-like interface to create IR bytecode.
+	 */
 	class Program {
 	private:
 		std::vector<Instruction *> instructions;
@@ -155,6 +244,15 @@ namespace IR {
 		 * of this operator is only valid until the next call.
 		 */
 		_InstructionPtr operator()(Opcode opcode);
+
+		/*
+		 * Assemble this program into IR bytecode.
+		 *
+		 * Returns the bytecode in a vector.
+		 * Throws InvalidInstructionException if there is an error in the
+		 * Instructions.
+		 */
+		std::vector<std::uint8_t> assemble();
 
 		~Program();
 	};
