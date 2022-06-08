@@ -117,11 +117,25 @@ namespace IR {
 					case Operand::REGISTER:
 					case Operand::INDIRECT:
 						scratch_make_room(3);  // Make room for 3 bits
-						scratch |= (static_cast<std::uint8_t>(std::get<Register>(instruction->op1->value)) << scratch_pos);
+						scratch |= (static_cast<std::uint8_t>(std::get<Register>(instruction->op2->value)) << scratch_pos);
 						break;
 					case Operand::SYMBOL:
-						// TODO: decide how to encode symbols (consider immediate null-terminated strings)
-						break;
+						// TODO: figure out how to determine which byte in prog a label refers to
+						{
+							std::string symbol = std::get<std::string>(instruction->op2->value);
+							if (symTable.contains(symbol)) {
+								// Local label
+								if (scratch_pos != 7) {
+									prog.push_back(scratch);
+									scratch_pos = 7;
+								}
+
+								prog.insert(prog.end(), {0, 0, 0, 0});
+							} else {
+								// External symbol
+							}
+							break;
+						}
 					case Operand::LITERAL:
 						// put the literal in the literal pool
 						break;
