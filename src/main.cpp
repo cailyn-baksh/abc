@@ -183,10 +183,11 @@ int main(int argc, char **argv) {
 	 * 3. call the code generator
 	 */
 
-	IR::Program prog = frontend->parse(srcFile);
+	std::vector<std::uint8_t> ir = frontend->parse(srcFile);
 
 	// optimize()
 
 	delete frontend;
+	delete backend;
 }
 

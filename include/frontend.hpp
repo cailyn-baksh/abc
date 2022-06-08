@@ -30,7 +30,7 @@ public:
 	 * program, and thus may write directly to output streams and terminate the
 	 * program.
 	 */
-	virtual IR::Program parse(std::string &file) = 0;
+	virtual std::vector<std::uint8_t> parse(std::string &file) = 0;
 
 	/*
 	 * Return a help string. This should document all user-facing features
@@ -54,7 +54,7 @@ class BrainfuckFrontend : public IFrontend {
 public:
 	void applyOptions(char option, std::vector<std::string> &values);
 
-	IR::Program parse(std::string &file);
+	std::vector<std::uint8_t> parse(std::string &file);
 
 	std::string helpStr();
 

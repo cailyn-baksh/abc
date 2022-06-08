@@ -89,7 +89,7 @@ namespace IR {
 	 */
 	enum Condition {
 		AL = 0b1000, NV = 0b0000,
-		Z  = 0b1001, NZ = 0b0001,
+		EQ = 0b1001, NE = 0b0001,
 		CS = 0b1010, CC = 0b0010,
 		MI = 0b1011, PL = 0b0011,
 		VS = 0b1100, VC = 0b0100,
@@ -97,6 +97,11 @@ namespace IR {
 		GE = 0b1110, LT = 0b0110,
 		GT = 0b1111, LE = 0b0111
 	};
+	// Alternate condition code names
+	const Condition Z = EQ;
+	const Condition NZ = NE;
+	const Condition HS = CS;
+	const Condition LO = CC;
 
 	/*
 	 * An instruction operand. This type differs from the actual encoding of

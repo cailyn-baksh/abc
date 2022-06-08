@@ -3,6 +3,7 @@
  */
 
 #include <fstream>
+#include <stack>
 
 #include "frontend.hpp"
 #include "ir.hpp"
@@ -11,9 +12,26 @@ void BrainfuckFrontend::applyOptions(char option, std::vector<std::string> &valu
 
 }
 
-IR::Program BrainfuckFrontend::parse(std::string &file) {
+std::vector<std::uint8_t> BrainfuckFrontend::parse(std::string &file) {
 	std::ifstream in(file);
 	IR::Program program;
+
+	std::stack<std::string> loopStack;
+
+	// Create a unique label for loops
+	// basically just returns a string with any ASCII character between
+	// '!' (0x21) and '~' (0x7E)
+	auto getUniqueLoopLabel = [](){
+		static std::string prevLbl = " ";
+
+		if (prevLbl.back() >= '~') {
+			prevLbl += "!";
+		} else {
+			prevLbl.back()++;
+		}
+
+		return prevLbl;
+	};
 
 	if (!in) {
 		// Failed to open file
@@ -21,48 +39,56 @@ IR::Program BrainfuckFrontend::parse(std::string &file) {
 
 	// Set up program
 	program.label("main");
-	program (IR::MOV) (IR::R1)(1);
 
 	char c;
 	while (in.get(c)) {
-		/*switch (c) {
+		std::string label;
+
+		switch (c) {
 			case '+':
-				// add r0,r1
-				program.push_instructions({IR::Instruction(IR::ADD, IR::R0, IR::R1)});
+				// add [ar],1
+				program(IR::ADD) [IR::AR](1);
 				break;
 			case '-':
-				// sub r0,r1
-				program.push_instructions({IR::Instruction(IR::SUB, IR::R0, IR::R1)});
+				// sub [ar],1
+				program(IR::SUB) [IR::AR](1);
 				break;
 			case '>':
-				// mov [cp],r0
-				// add cp,r1
-				// mov r0,[cp]
-				program.push_instructions({
-					IR::Instruction(IR::MOV, *IR::CP, IR::R0),
-					IR::Instruction(IR::ADD, IR::CP, IR::R1),
-					IR::Instruction(IR::MOV, IR::R0, *IR::CP)
-				});
+				// add ar,1
+				program(IR::ADD) (IR::AR)(1);
 				break;
 			case '<':
-				// mov [cp],r0
-				// sub cp,r1
-				// mov r0,[cp]
+				// sub ar,1
+				program(IR::SUB) (IR::AR)(1);
 				break;
 			case '[':
+				label = getUniqueLoopLabel();
+				loopStack.push(label);
+
+				program.label(label + "_start");
+				program(IR::TST) [IR::AR][IR::AR];
+				program(IR::JMP) (IR::Z)(label + "_end");
 				break;
 			case ']':
+				label = loopStack.top();
+				loopStack.pop();
+
+				program.label(label + "_end");
+				program(IR::TST) [IR::AR][IR::AR];
+				program(IR::JMP) (IR::NZ)(label + "_start");
 				break;
 			case '.':
 				// call putc
+				program(IR::CALL) ("putc");
 				break;
 			case ',':
 				// call getc
+				program(IR::CALL) ("getc");
 				break;
-		}*/
+		}
 	}
 
-	return program;
+	return program.assemble();
 }
 
 
