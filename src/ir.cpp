@@ -190,9 +190,7 @@ namespace IR {
 
 	// Add symbol
 	_InstructionPtr &_InstructionPtr::operator()(std::string sym) {
-		if (ptr->useOp1 && !ptr->op1) {
-			ptr->op1 = sym;
-		} else if (ptr->useOp2 && !ptr->op2) {
+		if (ptr->useOp2 && !ptr->op2) {
 			ptr->op2 = sym;
 		} else {
 			throw InvalidInstructionException("Cannot use symbol parameter here");
@@ -203,12 +201,21 @@ namespace IR {
 
 	// Add literal
 	_InstructionPtr &_InstructionPtr::operator()(std::uintmax_t lit) {
-		if (ptr->useOp1 && !ptr->op1) {
-			ptr->op1 = lit;
-		} else if (ptr->useOp2 && !ptr->op2) {
+		if (ptr->useOp2 && !ptr->op2) {
 			ptr->op2 = lit;
 		} else {
 			throw InvalidInstructionException("Cannot use PC-relative offset parameter here");
+		}
+
+		return *this;
+	}
+
+	_InstructionPtr &_InstructionPtr::operator()(Condition cc) {
+		if (ptr->useCC) {
+			// FIXME: CCs can be added to instructions indefinitely
+			ptr->cc = cc;
+		} else {
+			throw InvalidInstructionException("Cannot use condition code here");
 		}
 
 		return *this;

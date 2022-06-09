@@ -227,6 +227,8 @@ namespace IR {
 		 * Returns a reference to this
 		 */
 		_InstructionPtr &operator()(std::uintmax_t lit);
+
+		_InstructionPtr &operator()(Condition cc);
 	};
 
 	/*

@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
 	}
 
 	// Apply options to frontend and backend
-	{
+	/*{
 		std::vector<std::string> flags = vm["f"].as<std::vector<std::string>>();
 		std::vector<std::string> warnings = vm["W"].as<std::vector<std::string>>();
 
@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
 	if (vm.count("verbose")) {
 		frontend->setVerbosity(true);
 		backend->setVerbosity(true);
-	}
+	}*/
 
 	/*
 	 * Now its time to compile
@@ -183,7 +183,11 @@ int main(int argc, char **argv) {
 	 * 3. call the code generator
 	 */
 
-	std::vector<std::uint8_t> ir = frontend->parse(srcFile);
+	try {
+		std::vector<std::uint8_t> ir = frontend->parse(srcFile);
+	} catch (IR::InvalidInstructionException e) {
+		std::cerr << e.what() << std::endl;
+	}
 
 	// optimize()
 
