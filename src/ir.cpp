@@ -3,6 +3,23 @@
 
 #include "ir.hpp"
 
+class LiteralPool {
+private:
+	const std::size_t size;
+
+	std::uint8_t *pool;
+	std::size_t index;
+
+public:
+	LiteralPool(std::size_t size) : size(size) {
+		pool = new std::uint8_t[size];
+	}
+
+	~LiteralPool() {
+		delete pool;
+	}
+};
+
 namespace IR {
 	/* InvalidInstructionException */
 	InvalidInstructionException::InvalidInstructionException(const char *msg) : message(msg) {}
@@ -27,9 +44,9 @@ namespace IR {
 
 	std::vector<std::uint8_t> Program::assemble() {
 		std::vector<std::uint8_t> prog;
-		std::uint8_t *literalPool = new std::uint8_t[32];
-		// consider taking frequently used values from the literal pool and loading them into registers
-		// (is this done by the CPU cache already?)
+
+		std::uint8_t literalPool[256];
+		std::size_t literalPoolIndex;
 
 		for (Instruction *instruction : instructions) {
 			std::uint8_t instructionByte = 0;
@@ -74,17 +91,17 @@ namespace IR {
 
 			// Encode the rest
 			std::uint8_t scratch = 0;
-			int scratch_pos = 7;
+			int scratch_pos = 8;
 
 			/*
-			 * Make enough room in scratch to fit n bits
+			 * Makes enough room in scratch to fit n bits
 			 */
 			auto scratch_make_room = [&prog, &scratch, &scratch_pos](std::size_t n) {
 				if (scratch_pos - n < 0) {
 					// Not enough room
 					prog.push_back(scratch);
 					scratch = 0;
-					scratch_pos = 7;
+					scratch_pos = 8;
 				} else {
 					scratch_pos -= n;
 				}
@@ -117,34 +134,54 @@ namespace IR {
 					case Operand::REGISTER:
 					case Operand::INDIRECT:
 						scratch_make_room(3);  // Make room for 3 bits
-						scratch |= (static_cast<std::uint8_t>(std::get<Register>(instruction->op2->value)) << scratch_pos);
+						scratch |= (static_cast<std::uint8_t>(std::get<Register>(instruction->op2->value)) << scratch_pos-1);
 						break;
 					case Operand::SYMBOL:
 						// TODO: figure out how to determine which byte in prog a label refers to
 						{
+							if (scratch_pos != 8) {
+								prog.push_back(scratch);
+								scratch = 0;
+								scratch_pos = 8;
+							}
+
 							std::string symbol = std::get<std::string>(instruction->op2->value);
 							if (symTable.contains(symbol)) {
 								// Local label
-								if (scratch_pos != 7) {
-									prog.push_back(scratch);
-									scratch_pos = 7;
-								}
 
 								prog.insert(prog.end(), {0, 0, 0, 0});
 							} else {
 								// External symbol
+								for (const char &ch : symbol) {
+									prog.push_back(ch);
+								}
 							}
 							break;
 						}
 					case Operand::LITERAL:
 						// put the literal in the literal pool
+						/*{
+							std::uint8_t *literalBytes = (std::uint8_t *)(&std::get<std::uintmax_t>(instruction->op2->value));
+
+							for (std::size_t i=0; i < sizeof(std::uintmax_t); ++i, ++literalPoolIndex) {
+
+							}
+						}*/
+						if (scratch_pos != 8) {
+							prog.push_back(scratch);
+							scratch = 0;
+							scratch_pos = 8;
+						}
+						prog.insert(prog.end(), {0xFF, 0xFF});
 						break;
 				}
+			}
 
+			if (scratch_pos != 8) {
+				prog.push_back(scratch);
 			}
 		}
 
-		delete literalPool;
 		return prog;
 	}
 

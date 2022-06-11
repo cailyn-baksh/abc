@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <queue>
@@ -50,6 +51,8 @@ IBackend *selectBackend(std::string arch) {
 }
 
 int main(int argc, char **argv) {
+	// NOTE: boost::program_options has severe limitations.
+	// NOTE: this library will be replaced with another in the future
 	po::options_description generalOpts("General Options");
 	generalOpts.add_options()
 		("arch", po::value<std::string>(), "The target architecture to generate code for.")
@@ -142,6 +145,7 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 	} else {
+		// due to limitations of boost::program_options, this does not work
 		std::string language = vm["x"].as<std::string>();
 		frontend = selectFrontend(language, false);
 
@@ -183,10 +187,19 @@ int main(int argc, char **argv) {
 	 * 3. call the code generator
 	 */
 
+	std::vector<std::uint8_t> ir;
 	try {
-		std::vector<std::uint8_t> ir = frontend->parse(srcFile);
+		ir = frontend->parse(srcFile);
 	} catch (IR::InvalidInstructionException e) {
 		std::cerr << e.what() << std::endl;
+		return -1;
+	}
+
+	std::ofstream file;
+	file.open("out.ir", std::ios::out | std::ios::trunc | std::ios::binary);
+
+	for (const std::uint8_t &v : ir) {
+		file.put(v);
 	}
 
 	// optimize()
