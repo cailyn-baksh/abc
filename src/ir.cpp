@@ -1,5 +1,10 @@
 #include <array>
+#include <queue>
+#include <utility>
 #include <variant>
+
+#include <cstddef>
+#include <cstdint>
 
 #include "ir.hpp"
 
@@ -45,10 +50,28 @@ namespace IR {
 	std::vector<std::uint8_t> Program::assemble() {
 		std::vector<std::uint8_t> prog;
 
-		std::uint8_t literalPool[256];
-		std::size_t literalPoolIndex;
+		// during the first assembly pass, all symbols are skipped over, with
+		// null bytes written in their place. the symbol fixup queue is a queue
+		// of all the locations in prog where this was done, with the name of
+		// the local symbol which should be used
+		std::queue<std::pair<std::size_t, std::string>> symbolFixupQueue;
+		// associates locate symbol names with their positions in prog
+		std::map<std::string, std::uint32_t> localSymbols;
+
+		std::vector<std::uint8_t> literalPool;
 
 		for (Instruction *instruction : instructions) {
+			// Start by checking if a local label points here
+			for (auto &[key, value] : symTable) {
+				if (instructions[value] == instruction) {  // pointer comparison not object comparison
+					// this symbol points to this instruction; record this in the fixup queue
+					localSymbols[key] = prog.size();
+					symTable.erase(key);  // remove from symtable to make future loops faster
+										  // if we dont do this the object will be reusable...
+					break;
+				}
+			}
+
 			std::uint8_t instructionByte = 0;
 
 			// Populate instruction byte
@@ -107,6 +130,17 @@ namespace IR {
 				}
 			};
 
+			/*
+			 * Flush scratch into program
+			 */
+			auto scratch_flush = [&prog, &scratch, &scratch_pos]() {
+				if (scratch_pos != 8) {
+					prog.push_back(scratch);
+					scratch = 0;
+					scratch_pos = 8;
+				}
+			};
+
 			if (instruction->opcode == JMP) {
 				// Special case; need to encode condition code first
 				// cc always immediately follows JMP so no need to worry about
@@ -134,24 +168,20 @@ namespace IR {
 					case Operand::REGISTER:
 					case Operand::INDIRECT:
 						scratch_make_room(3);  // Make room for 3 bits
-						scratch |= (static_cast<std::uint8_t>(std::get<Register>(instruction->op2->value)) << scratch_pos-1);
+						scratch |= (static_cast<std::uint8_t>(std::get<Register>(instruction->op2->value)) << (scratch_pos-1));
 						break;
 					case Operand::SYMBOL:
 						// TODO: figure out how to determine which byte in prog a label refers to
 						{
-							if (scratch_pos != 8) {
-								prog.push_back(scratch);
-								scratch = 0;
-								scratch_pos = 8;
-							}
+							scratch_flush();
 
 							std::string symbol = std::get<std::string>(instruction->op2->value);
 							if (symTable.contains(symbol)) {
-								// Local label
-
+								// Local label; will fixup later
+								symbolFixupQueue.push(std::make_pair(prog.size(), symbol));
 								prog.insert(prog.end(), {0, 0, 0, 0});
 							} else {
-								// External symbol
+								// External symbol; put the name for the linker
 								for (const char &ch : symbol) {
 									prog.push_back(ch);
 								}
@@ -167,19 +197,29 @@ namespace IR {
 
 							}
 						}*/
-						if (scratch_pos != 8) {
-							prog.push_back(scratch);
-							scratch = 0;
-							scratch_pos = 8;
-						}
+						scratch_flush();
+
 						prog.insert(prog.end(), {0xFF, 0xFF});
 						break;
 				}
 			}
 
+
 			if (scratch_pos != 8) {
 				prog.push_back(scratch);
 			}
+		}
+
+		// fixup local symbols
+		while (!symbolFixupQueue.empty()) {
+			auto fixup = symbolFixupQueue.front();
+			std::uint8_t *bytes = (std::uint8_t *)&localSymbols[fixup.second];
+
+			for (std::size_t i=0; i < sizeof(std::uint32_t); ++i) {
+				prog[fixup.first + i] = bytes[i];
+			}
+
+			symbolFixupQueue.pop();
 		}
 
 		return prog;

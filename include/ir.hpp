@@ -238,6 +238,8 @@ namespace IR {
 	class Program {
 	private:
 		std::vector<Instruction *> instructions;
+
+		/* The symbol table */
 		std::map<std::string, std::size_t> symTable;
 
 	public:
@@ -253,7 +255,8 @@ namespace IR {
 		_InstructionPtr operator()(Opcode opcode);
 
 		/*
-		 * Assemble this program into IR bytecode.
+		 * Assemble this program into IR bytecode. After calling this function,
+		 * the Program object is invalid and will not assemble properly again
 		 *
 		 * Returns the bytecode in a vector.
 		 * Throws InvalidInstructionException if there is an error in the
