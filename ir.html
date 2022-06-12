@@ -295,6 +295,22 @@
 				<figcaption>Figure 4: Register Encodings</figcaption>
 			</figure>
 
+			<h3 id="mem-addr-encode">Memory Address Encoding</h3>
+			<p>
+				Memory addresses are encoded in one of two ways. If the first
+				bit of the address is set, then the next 31 bits are an offset
+				from the beginning of the program. If the first bit is clear,
+				then it is the beginning of a null-terminated string specifying
+				the name of an external symbol.
+			</p>
+
+			<h3 id="pc-rel-encode">PC-Relative Offsets</h3>
+			<p>
+				PC-relative offsets are encoded as signed 16-bit values, which
+				are added to the address of the beginning of this instruction
+				to yield the address of the value.
+			</p>
+
 			<h3 id="cond-codes">Condition Codes</h3>
 			<p>
 				Some instructions take condition code arguments. Condition
@@ -306,11 +322,13 @@
 			<figure>
 				<table class="list">
 					<thead>
-						<th>Code</th>
-						<th>Condition</th>
-						<th>Mnemonic</th>
-						<th>Negated Condition</th>
-						<th>Mnemonic</th>
+						<tr>
+							<th>Code</th>
+							<th>Condition</th>
+							<th>Mnemonic</th>
+							<th>Negated Condition</th>
+							<th>Mnemonic</th>
+						</tr>
 					</thead>
 					<tbody style="font-family:serif">
 						<tr>
@@ -373,6 +391,17 @@
 				</table>
 				<figcaption>Condition Codes</figcaption>
 			</figure>
+
+			<h3>Operand Size Specifier</h3>
+			<p>
+				Some instructions will require that their operand size be
+				specified. This is done using the operand size specifier, which
+				is a 2-bit value that is used to calculate the size in bytes of
+				the operands. The size of the operands is equal to
+				<span style="font-family:serif">2<sup>size</sup></span>.
+				Operand Size Specifiers do not affect the values in a register
+				(but they do affect register indirect values).
+			</p>
 		</main>
 	</body>
 </html>

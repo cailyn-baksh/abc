@@ -98,7 +98,10 @@
 				</tbody>
 			</table>
 			<p class="no-indent">Op1 = Op1 + Op2</p>
-			<p>Adds Op2 to Op1 and updates Op1.</p>
+			<p>
+				Adds Op2 to Op1 and updates Op1. This instruction expects an
+				operand size specifier before the operands.
+			</p>
 
 			<hr />
 			<h2 id="sub"><code>sub</code>: Subtraction</h2>
@@ -136,7 +139,10 @@
 				</tbody>
 			</table>
 			<p class="no-indent">Op1 = Op1 - Op2</p>
-			<p>Subtracts Op2 from Op1 and updates Op1.</p>
+			<p>
+				Subtracts Op2 from Op1 and updates Op1. This instruction
+				expects an operand size specifier before the operands.
+			</p>
 
 			<hr />
 			<h2 id="mul"><code>mul</code>: Multiplication</h2>
@@ -174,7 +180,10 @@
 				</tbody>
 			</table>
 			<p class="no-indent">Op1 = Op1 &times; Op2</p>
-			<p>Multiplies Op1 by Op2 and updates Op1.</p>
+			<p>
+				Multiplies Op1 by Op2 and updates Op1. This instruction expects
+				an operand size specifier before the operands.
+			</p>
 
 			<hr />
 			<h2 id="div"><code>div</code>: Division</h2>
@@ -212,7 +221,10 @@
 				</tbody>
 			</table>
 			<p class="no-indent">Op1 = Op1 &div; Op2</p>
-			<p>Divides Op1 by Op2 and updates Op1.</p>
+			<p>
+				Divides Op1 by Op2 and updates Op1. This instruction expects an
+				operand size specifier before the operands.
+			</p>
 
 			<hr />
 			<h2 id="cmp"><code>cmp</code>: Comparison</h2>
@@ -251,7 +263,8 @@
 			</table>
 			<p>
 				Compares Op1 to Op2 by subtraction. Op2 is subtracted from Op1,
-				and the resulting value is discarded.
+				and the resulting value is discarded. This instruction expects
+				an operand size specifier before the operands.
 			</p>
 
 			<hr />
@@ -291,7 +304,9 @@
 			</table>
 			<p>
 				Compares Op1 to Op2 by bitwise AND. The values are ANDed
-				together, and the resulting value is discarded.
+				together, and the resulting value is discarded. This
+				instruction expects an operand size specifier before the
+				operands.
 			</p>
 
 			<hr />
@@ -330,7 +345,11 @@
 				</tbody>
 			</table>
 			<p class="no-indent">Op1 = Op1 &and; Op2</p>
-			<p>Performs bitwise AND on Op1 and Op2 and updates Op1.</p>
+			<p>
+				Performs bitwise AND on Op1 and Op2 and updates Op1. This
+				instruction expects an operand size specifier before the
+				operands.
+			</p>
 
 			<hr />
 			<h2 id="or"><code>or</code>: Bitwise OR</h2>
@@ -368,7 +387,11 @@
 				</tbody>
 			</table>
 			<p class="no-indent">Op1 = Op1 &or; Op2</p>
-			<p>Performs bitwise OR on Op1 and Op2 and updates Op1</p>
+			<p>
+				Performs bitwise OR on Op1 and Op2 and updates Op1. This
+				instruction expects an operand size specifier before the
+				operands.
+			</p>
 
 			<hr />
 			<h2 id="xor"><code>xor</code>: Bitwise XOR</h2>
@@ -406,7 +429,11 @@
 				</tbody>
 			</table>
 			<p class="no-indent">Op1 = Op1 &oplus; Op2</p>
-			<p>Performs bitwise XOR on Op1 and Op2 and updates Op1.</p>
+			<p>
+				Performs bitwise XOR on Op1 and Op2 and updates Op1. This
+				instruction expects an operand size specifier before the
+				operands.
+			</p>
 
 			<hr />
 			<h2 id="cpl"><code>cpl</code>: One's Complement</h2>
@@ -444,7 +471,10 @@
 				</tbody>
 			</table>
 			<p class="no-indent">Op1 = ~Op1</p>
-			<p>Inverts the bits of Op1 and updates Op1.</p>
+			<p>
+				Inverts the bits of Op1 and updates Op1. This instruction
+				expects an operand size specifier before the operands.
+			</p>
 
 			<hr />
 			<h2 id="lsl"><code>lsl</code>: Logical Shift Left</h2>
@@ -484,7 +514,8 @@
 			<p class="no-indent">Op1 = Op1 &lt;&lt; Op2</p>
 			<p>
 				Shifts the bits of Op1 left by Op2, shifting in zeroes, and
-				updates Op1.
+				updates Op1. This instruction expects an operand size specifier
+				before the operands.
 			</p>
 
 			<hr />
@@ -525,7 +556,8 @@
 			<p class="no-indent">Op1 = Op1 &gt;&gt; Op2</p>
 			<p>
 				Shifts the bits of Op1 right by Op2, shifting in zeroes, and
-				updates Op1.
+				updates Op1. This instruction expects an operand size specifier
+				before the operands.
 			</p>
 
 			<hr />
@@ -566,7 +598,8 @@
 			<p class="no-indent">Op1 = Op1 &gt;&gt; Op2</p>
 			<p>
 				Shifts the bits of Op1 right by Op2, shifting in a copy of the
-				most significant bit, and updates Op1.
+				most significant bit, and updates Op1. This instruction expects
+				an operand size specifier before the operands.
 			</p>
 
 			<hr />
@@ -605,7 +638,10 @@
 				</tbody>
 			</table>
 			<p class="no-indent">Op1 = Op2</p>
-			<p>Loads Op2 into Op1.</p>
+			<p>
+				Loads Op2 into Op1. This instruction expects an operand size
+				specifier before the operands.
+			</p>
 
 			<hr />
 			<h2 id="call"><code>call</code>: Call</h2>
