@@ -8,23 +8,6 @@
 
 #include "ir.hpp"
 
-class LiteralPool {
-private:
-	const std::size_t size;
-
-	std::uint8_t *pool;
-	std::size_t index;
-
-public:
-	LiteralPool(std::size_t size) : size(size) {
-		pool = new std::uint8_t[size];
-	}
-
-	~LiteralPool() {
-		delete pool;
-	}
-};
-
 namespace IR {
 	/* InvalidInstructionException */
 	InvalidInstructionException::InvalidInstructionException(const char *msg) : message(msg) {}
@@ -190,16 +173,23 @@ namespace IR {
 						}
 					case Operand::LITERAL:
 						// put the literal in the literal pool
-						/*{
-							std::uint8_t *literalBytes = (std::uint8_t *)(&std::get<std::uintmax_t>(instruction->op2->value));
+						// how could the literal pool work?
 
-							for (std::size_t i=0; i < sizeof(std::uintmax_t); ++i, ++literalPoolIndex) {
-
-							}
-						}*/
+						// previous pool = null, current pool = new pool, section start = 0
+						// when assembling
+						//		write literals as blank pc-rel offsets
+						//		create queue of literal fixups (similar to symbol fixup queue)
+						//		add literal to current pool
+						//		if current position - section start = 2^31 - max size of pool
+						//			section start = current position
+						//			write current literal pool
+						//			fixup literals, using both current and previous pool
+						//			previous pool = current pool
+						//			current pool = new pool
 						scratch_flush();
 
-						prog.insert(prog.end(), {0xFF, 0xFF});
+						// literal; will fixup later
+						prog.insert(prog.end(), {0x00, 0x00});
 						break;
 				}
 			}
