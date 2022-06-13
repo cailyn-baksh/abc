@@ -29,19 +29,6 @@
 				all instructions.
 			</p>
 			<p>
-				Although the specifics are up to the frontends generating the
-				IR, the general idea is for literals to be encoded as literal
-				pools which are referenced using PC-relative offsets. Short
-				jumps (within 32768 bytes) can be encoded as jumps to a
-				PC-relative offset, and longer jumps can be encoded as a 31-bit
-				offset from the beginning of the program. There are no
-				provisions to enable programs larger than 2147483648 bytes.
-				External symbols are encoded as immediate strings in the IR, to
-				be dealt with by the backend or linker. Memory addresses, while
-				not directly dereferencable, can be loaded into a register and
-				then dereferenced.
-			</p>
-			<p>
 				In total, the architecture has 16 instructions and 8 registers.
 				Seven of these registers are general purpose, and one is a cell
 				pointer. There is no concrete program counter as the
