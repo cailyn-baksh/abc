@@ -222,11 +222,10 @@
 						</tr>
 						<tr>
 							<td><code>0b11</code></td>
-							<td>PC-Relative Offset</td>
+							<td>Immediate</td>
 							<td style="text-align: left;">
-								A read only value stored at a fixed signed
-								16-bit offset from the beginning of the
-								instruction.
+								An immediate value. The length of this value
+								is determined by the instruction.
 							</td>
 						</tr>
 					</tbody>
@@ -304,11 +303,10 @@
 				the name of an external symbol.
 			</p>
 
-			<h3 id="pc-rel-encode">PC-Relative Offsets</h3>
+			<h3 id="pc-rel-encode">Immediate values</h3>
 			<p>
-				PC-relative offsets are encoded as signed 16-bit values, which
-				are added to the address of the beginning of this instruction
-				to yield the address of the value.
+				A literal value encoded immediately in the instruction. Each
+				opcode specifies how many bytes an immediate value can be.
 			</p>
 
 			<h3 id="cond-codes">Condition Codes</h3>
