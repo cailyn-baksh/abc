@@ -58,6 +58,11 @@
 				immediately following the instruction byte.
 			</p>
 			<p>
+				If op2 of a jmp instruction is a literal (<code>0b11</code>),
+				then the literal is a signed 16-bit offset which is added to
+				the program counter.
+			</p>
+			<p>
 				<code>jmp</code> is designed so that it can be used to encode
 				a <code>nop</code> pseudo-instruction as two null bytes.
 			</p>
@@ -681,7 +686,7 @@
 			<p class="no-indent">Op1 = Op1 &amp; Op2</p>
 			<p>
 				Loads a value into the program counter and saves the old value
-				in the Link Register.
+				in the Link Register. Op2 cannot be a literal.
 			</p>
 
 			<h1>Pseudo-instructions</h1>
