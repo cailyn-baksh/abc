@@ -1,11 +1,12 @@
 NAME = abc
+VERSION = v0.1.0
 SRCS = $(filter-out %.swp,$(wildcard src/*))
 OBJS = $(addsuffix .o,$(patsubst src/%,bin/%,$(SRCS)))
 INCLUDES = include/
 LIBS = boost_program_options
 
-CFLAGS = -std=gnu17 -03 -Wall $(addprefix -I,$(INCLUDES))
-CXXFLAGS = -std=gnu++20 -O3 -Wall $(addprefix -I,$(INCLUDES))
+CFLAGS = -std=gnu17 -03 -Wall $(addprefix -I,$(INCLUDES)) -DNAME=\"$(NAME)\" -DVERSION=\"$(VERSION)\"
+CXXFLAGS = -std=gnu++20 -O3 -Wall $(addprefix -I,$(INCLUDES)) -DNAME=\"$(NAME)\" -DVERSION=\"$(VERSION)\"
 
 build: $(OBJS)
 	g++ -Wl,-rpath='$$ORIGIN' -o bin/$(NAME) $^ $(addprefix -l,$(LIBS))

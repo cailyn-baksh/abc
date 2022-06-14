@@ -12,9 +12,6 @@
 #include "frontend.hpp"
 #include "backend.hpp"
 
-#define NAME "abc"
-#define VERSION "v0.0.2"
-
 namespace po = boost::program_options;
 
 // TODO: create map like this to select frontends and backends
