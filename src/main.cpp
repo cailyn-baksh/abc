@@ -17,6 +17,9 @@
 
 namespace po = boost::program_options;
 
+// TODO: create map like this to select frontends and backends
+// https://stackoverflow.com/a/24124037
+
 /*
  * Construct a new frontend from a code or file extension
  *
@@ -52,6 +55,7 @@ IBackend *selectBackend(std::string arch) {
 
 int main(int argc, char **argv) {
 	// NOTE: boost::program_options has severe limitations.
+	// NOTE: only --arch, --output, and input are guaranteed to be functional
 	// NOTE: this library will be replaced with another in the future
 	po::options_description generalOpts("General Options");
 	generalOpts.add_options()
@@ -83,10 +87,6 @@ int main(int argc, char **argv) {
 	po::variables_map vm;
 	po::store(po::command_line_parser(argc, argv).options(options).positional(positional).run(), vm);
 	po::notify(vm);
-
-	if (vm.count("x")) {
-		std::cout << 'x' << std::endl;
-	}
 
 	// Check peripheral options (options that do not trigger the main function of the program)
 	if (vm.count("help")) {
@@ -190,19 +190,21 @@ int main(int argc, char **argv) {
 	std::vector<std::uint8_t> ir;
 	try {
 		ir = frontend->parse(srcFile);
-	} catch (IR::InvalidInstructionException e) {
+	} catch (IR::InvalidInstructionException &e) {
 		std::cerr << e.what() << std::endl;
 		return -1;
 	}
 
 	std::ofstream file;
-	file.open("out.ir", std::ios::out | std::ios::trunc | std::ios::binary);
+	file.open("bin/out.ir", std::ios::out | std::ios::trunc | std::ios::binary);
 
 	for (const std::uint8_t &v : ir) {
 		file.put(v);
 	}
 
-	// optimize()
+	// optimize(&ir);
+
+	//ir = backend->compile(ir);
 
 	delete frontend;
 	delete backend;

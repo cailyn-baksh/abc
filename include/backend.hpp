@@ -32,6 +32,8 @@ public:
 	 */
 	virtual void setVerbosity(bool verbosity) = 0;
 
+	virtual void compile(std::vector<std::uint8_t> &ir);
+
 	virtual ~IBackend() {}
 };
 

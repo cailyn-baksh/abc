@@ -9,7 +9,9 @@
 #include "ir.hpp"
 
 namespace IR {
-	/* InvalidInstructionException */
+	/*******************************
+	 * InvalidInstructionException *
+	 *******************************/
 	InvalidInstructionException::InvalidInstructionException(const char *msg) : message(msg) {}
 
 	const char *InvalidInstructionException::what() {
@@ -17,7 +19,9 @@ namespace IR {
 	}
 
 
-	/* Program */
+	/***********
+	 * Program *
+	 ***********/
 	void Program::label(std::string lbl) {
 		symTable[lbl] = instructions.size();
 	}
@@ -26,6 +30,27 @@ namespace IR {
 		Instruction *instr = new Instruction(opcode);
 
 		instructions.push_back(instr);
+
+		return _InstructionPtr(instr);
+	}
+
+	_InstructionPtr Program::operator()(Pseudoinstruction pseudo) {
+		Instruction *instr = nullptr;
+
+		switch (pseudo) {
+			case NOP:
+				// jump with null address and a 'never' condition
+				instr = new Instruction(JMP);
+				instr->cc = NV;
+				instr->op2 = Operand(0);
+				instr->size = BYTE;
+				break;
+			case RET:
+				// jmp lr
+				instr = new Instruction(JMP);
+				instr->op2 = Operand(LR);
+				break;
+		}
 
 		return _InstructionPtr(instr);
 	}
@@ -40,8 +65,6 @@ namespace IR {
 		std::queue<std::pair<std::size_t, std::string>> symbolFixupQueue;
 		// associates locate symbol names with their positions in prog
 		std::map<std::string, std::uint32_t> localSymbols;
-
-		std::vector<std::uint8_t> literalPool;
 
 		for (Instruction *instruction : instructions) {
 			// Start by checking if a local label points here
@@ -99,6 +122,8 @@ namespace IR {
 			std::uint8_t scratch = 0;
 			int scratch_pos = 8;
 
+			OperandSize opSize = WORD;
+
 			/*
 			 * Makes enough room in scratch to fit n bits
 			 */
@@ -129,7 +154,24 @@ namespace IR {
 				// cc always immediately follows JMP so no need to worry about
 				// values in scratch
 				scratch_pos -= 4;
-				scratch |= (static_cast<std::uint8_t>(instruction->cc) << scratch_pos);
+				if (instruction->cc) {
+					scratch |= static_cast<std::uint8_t>(*instruction->cc) << scratch_pos;
+				} else {
+					// if no cc was specified then default to AL
+					scratch |= AL << scratch_pos;
+				}
+			}
+
+			if (instruction->useOpSize) {
+				// Operand size specifier
+				// operand size is not valid with jump instruction, so no room
+				// checking necessary
+				scratch_pos -= 2;
+				if (instruction->size) {
+					opSize = *instruction->size;
+				}
+
+				scratch |= static_cast<std::uint8_t>(opSize) << scratch_pos;
 			}
 
 			// Now we add the rest of the operands
@@ -139,7 +181,8 @@ namespace IR {
 				// always 3 bits.
 				// No type checking needed since that was already done when
 				// encoding the instruction byte.
-				// No need to make room since at this point there always will be 4 bits left
+				// No need to make room since at this point there always will
+				// be at least 4 bits left
 				scratch_pos -= 3;
 				scratch |= (static_cast<std::uint8_t>(std::get<Register>(instruction->op1->value)) << scratch_pos);
 			}
@@ -151,7 +194,7 @@ namespace IR {
 					case Operand::REGISTER:
 					case Operand::INDIRECT:
 						scratch_make_room(3);  // Make room for 3 bits
-						scratch |= (static_cast<std::uint8_t>(std::get<Register>(instruction->op2->value)) << (scratch_pos-1));
+						scratch |= (static_cast<std::uint8_t>(std::get<Register>(instruction->op2->value)) << scratch_pos);
 						break;
 					case Operand::SYMBOL:
 						// TODO: figure out how to determine which byte in prog a label refers to
@@ -172,24 +215,19 @@ namespace IR {
 							break;
 						}
 					case Operand::LITERAL:
-						// put the literal in the literal pool
-						// how could the literal pool work?
-
-						// previous pool = null, current pool = new pool, section start = 0
-						// when assembling
-						//		write literals as blank pc-rel offsets
-						//		create queue of literal fixups (similar to symbol fixup queue)
-						//		add literal to current pool
-						//		if current position - section start = 2^31 - max size of pool
-						//			section start = current position
-						//			write current literal pool
-						//			fixup literals, using both current and previous pool
-						//			previous pool = current pool
-						//			current pool = new pool
+						// we can encode the value immediately rather than using a literal pool
 						scratch_flush();
 
-						// literal; will fixup later
-						prog.insert(prog.end(), {0x00, 0x00});
+						// treat the address of the literal as the beginning of
+						// an array, so that we can access each byte
+						// individually
+						std::uintmax_t value = std::get<std::uintmax_t>(instruction->op2->value);
+						std::uint8_t *bytes = (uint8_t *)&value;
+
+						for (std::size_t i=0; i < (1U << static_cast<unsigned int>(opSize)); ++i) {
+							prog.push_back(bytes[i]);
+						}
+
 						break;
 				}
 			}
@@ -222,8 +260,20 @@ namespace IR {
 	}
 
 
-	/* _InstructionPtr */
+	/*******************
+	 * _InstructionPtr *
+	 *******************/
 	_InstructionPtr::_InstructionPtr(Instruction *i) : ptr(i) {}
+
+	_InstructionPtr &_InstructionPtr::operator()(OperandSize size) {
+		if (ptr->useOpSize && !ptr->size) {
+			ptr->size = size;
+		} else {
+			throw InvalidInstructionException("Cannot use operand size specifier here");
+		}
+
+		return *this;
+	}
 
 	// Add register
 	_InstructionPtr &_InstructionPtr::operator()(Register reg) {
@@ -278,8 +328,7 @@ namespace IR {
 	}
 
 	_InstructionPtr &_InstructionPtr::operator()(Condition cc) {
-		if (ptr->useCC) {
-			// FIXME: CCs can be added to instructions indefinitely
+		if (ptr->useCC && !ptr->cc) {
 			ptr->cc = cc;
 		} else {
 			throw InvalidInstructionException("Cannot use condition code here");
@@ -289,38 +338,35 @@ namespace IR {
 	}
 
 
-	/* Instruction */
+	/***************
+	 * Instruction *
+	 ***************/
 	Instruction::Instruction(Opcode opcode) : opcode(opcode) {
 		if (opcode == JMP) {
 			useCC = true;
 			useOp2 = true;
 		} else if (opcode == CPL) {
+			useOpSize = true;
 			useOp1 = true;
 		} else if (opcode == CALL) {
 			useOp2 = true;
 		} else {
+			useOpSize = true;
 			useOp1 = true;
 			useOp2 = true;
 		}
 	}
 
 
-	/* Operand */
+	/***********
+	 * Operand *
+	 ***********/
 	Operand::Operand() {}
 
-	Operand::Operand(Register reg) {
-		this->type = REGISTER;
-		this->value = reg;
-	}
+	Operand::Operand(Register reg) : type(REGISTER), value(reg) {}
 
-	Operand::Operand(std::string sym) {
-		this->type = SYMBOL;
-		this->value = sym;
-	}
+	Operand::Operand(std::string sym) : type(SYMBOL), value(sym) {}
 
-	Operand::Operand(std::uintmax_t lit) {
-		this->type = LITERAL;
-		this->value = lit;
-	}
+	Operand::Operand(std::uintmax_t lit) : type(LITERAL), value(lit) {}
 }
 

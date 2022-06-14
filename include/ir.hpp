@@ -80,8 +80,8 @@ namespace IR {
 		R7 = 0b111
 	};
 	// Alternate register names
-	const Register AR = R6;
-	const Register LR = R7;
+	constexpr Register AR = R6;
+	constexpr Register LR = R7;
 
 	/*
 	 * IR conditions. The NV condition is added to represent the never
@@ -98,10 +98,30 @@ namespace IR {
 		GT = 0b1111, LE = 0b0111
 	};
 	// Alternate condition code names
-	const Condition Z = EQ;
-	const Condition NZ = NE;
-	const Condition HS = CS;
-	const Condition LO = CC;
+	constexpr Condition Z = EQ;
+	constexpr Condition NZ = NE;
+	constexpr Condition HS = CS;
+	constexpr Condition LO = CC;
+
+	/*
+	 * Pseudoinstructions, i.e. common instructions which do not have their own
+	 * opcodes but are defined to be aliases for other opcodes with certain
+	 * operands having fixed values.
+	 */
+	enum Pseudoinstruction {
+		NOP,
+		RET
+	};
+
+	/*
+	 * 
+	 */
+	enum OperandSize {
+		BYTE	= 0b00,
+		HWORD	= 0b01,
+		WORD	= 0b10,
+		DWORD	= 0b11
+	};
 
 	/*
 	 * An instruction operand. This type differs from the actual encoding of
@@ -142,7 +162,7 @@ namespace IR {
 		Operand(std::string sym);
 
 		/*
-		 * An literal integer value.
+		 * A literal integer value.
 		 *
 		 * lit	The value
 		 */
@@ -162,10 +182,12 @@ namespace IR {
 	private:
 		Opcode opcode;
 
-		Condition cc = AL;
+		std::optional<OperandSize> size;
+		std::optional<Condition> cc;
 		std::optional<Operand> op1;
 		std::optional<Operand> op2;
 
+		bool useOpSize = false;
 		bool useCC = false;
 		bool useOp1 = false;
 		bool useOp2 = false;
@@ -196,6 +218,12 @@ namespace IR {
 		_InstructionPtr(Instruction *i);
 
 	public:
+		/*
+		 * Set the size of this operation. If unspecified, the size defaults to
+		 * WORD (32-bit)
+		 */
+		_InstructionPtr &operator()(OperandSize size);
+
 		/*
 		 * Add a register argument to the instruction
 		 *
@@ -228,6 +256,12 @@ namespace IR {
 		 */
 		_InstructionPtr &operator()(std::uintmax_t lit);
 
+		/*
+		 * Apply a condition code to the instruction
+		 *
+		 * cc	The condition code to add
+		 * Returns a reference to this
+		 */
 		_InstructionPtr &operator()(Condition cc);
 	};
 
@@ -253,6 +287,13 @@ namespace IR {
 		 * of this operator is only valid until the next call.
 		 */
 		_InstructionPtr operator()(Opcode opcode);
+
+		/*
+		 * Add the given pseudoinstruction to the program.
+		 *
+		 * pseudo	The pseudoinstruction to add.
+		 */
+		_InstructionPtr operator()(Pseudoinstruction pseudo);
 
 		/*
 		 * Assemble this program into IR bytecode. After calling this function,

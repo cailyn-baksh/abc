@@ -16,7 +16,7 @@ std::vector<std::uint8_t> BrainfuckFrontend::parse(std::string &file) {
 	std::ifstream in(file);
 	IR::Program program;
 
-	std::stack<std::string> loopStack;
+	std::stack<std::string> loopStack;  // loop label prefixes
 
 	// Create a unique label for loops
 	// basically just returns a string with any ASCII character between
@@ -46,12 +46,12 @@ std::vector<std::uint8_t> BrainfuckFrontend::parse(std::string &file) {
 
 		switch (c) {
 			case '+':
-				// add [ar],1
-				program(IR::ADD) [IR::AR](1);
+				// add byte [ar],1
+				program(IR::ADD) (IR::BYTE) [IR::AR](1);
 				break;
 			case '-':
-				// sub [ar],1
-				program(IR::SUB) [IR::AR](1);
+				// sub byte [ar],1
+				program(IR::SUB) (IR::BYTE) [IR::AR](1);
 				break;
 			case '>':
 				// add ar,1
@@ -65,16 +65,22 @@ std::vector<std::uint8_t> BrainfuckFrontend::parse(std::string &file) {
 				label = getUniqueLoopLabel();
 				loopStack.push(label);
 
+				// _start:
+				//   tst byte [ar],[ar]
+				//   jmp z,_end
 				program.label(label + "_start");
-				program(IR::TST) [IR::AR][IR::AR];
+				program(IR::TST) (IR::BYTE) [IR::AR][IR::AR];
 				program(IR::JMP) (IR::Z)(label + "_end");
 				break;
 			case ']':
 				label = loopStack.top();
 				loopStack.pop();
 
+				// _end:
+				//   tst byte [ar],[ar]
+				//   jmp nz,_start
 				program.label(label + "_end");
-				program(IR::TST) [IR::AR][IR::AR];
+				program(IR::TST) (IR::BYTE) [IR::AR][IR::AR];
 				program(IR::JMP) (IR::NZ)(label + "_start");
 				break;
 			case '.':
