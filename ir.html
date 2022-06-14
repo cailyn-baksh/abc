@@ -281,7 +281,7 @@
 				<figcaption>Figure 4: Register Encodings</figcaption>
 			</figure>
 
-			<h3 id="mem-addr-encode">Memory Address Encoding</h3>
+			<h3 id="mem-encode">Memory Address Encoding</h3>
 			<p>
 				Memory addresses are encoded in one of two ways. If the first
 				bit of the address is set, then the next 31 bits are an offset
@@ -290,7 +290,7 @@
 				the name of an external symbol.
 			</p>
 
-			<h3 id="pc-rel-encode">Immediate values</h3>
+			<h3 id="imm-encode">Immediate values</h3>
 			<p>
 				A literal value encoded immediately in the instruction. Each
 				opcode specifies how many bytes an immediate value can be.
@@ -377,7 +377,7 @@
 				<figcaption>Condition Codes</figcaption>
 			</figure>
 
-			<h3>Operand Size Specifier</h3>
+			<h3 id="op-size-spec">Operand Size Specifier</h3>
 			<p>
 				Some instructions will require that their operand size be
 				specified. This is done using the operand size specifier, which
