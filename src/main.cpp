@@ -9,6 +9,7 @@
 #include <boost/program_options.hpp>
 
 #include "ir.hpp"
+#include "pipeline.hpp"
 #include "frontend.hpp"
 #include "backend.hpp"
 
@@ -113,7 +114,7 @@ int main(int argc, char **argv) {
 
 		return 0;
 	} else if (vm.count("version")) {
-		std::cout << NAME << " " << VERSION << std::endl;
+		std::cout << NAME " " VERSION << std::endl;
 		return 0;
 	}
 

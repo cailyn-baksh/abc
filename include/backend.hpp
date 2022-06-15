@@ -16,7 +16,7 @@ public:
 	 *			Flags may be prefixed with "no-" to disable the flag.
 	 *			Unrecognised values are ignored.
 	 */
-	virtual void applyOptions(char option, std::vector<std::string> values) = 0;
+	virtual void applyOptions(char option, std::vector<std::string> &values) = 0;
 
 	/*
 	 * Return a help string. This should document all user-facing features
@@ -32,9 +32,12 @@ public:
 	 */
 	virtual void setVerbosity(bool verbosity) = 0;
 
-	virtual void compile(std::vector<std::uint8_t> &ir);
+	virtual void compile(std::vector<std::uint8_t> &ir) = 0;
 
 	virtual ~IBackend() {}
 };
+
+/* Backends */
+
 
 #endif  // _BACKEND_HPP_

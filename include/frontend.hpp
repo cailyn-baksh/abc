@@ -49,7 +49,9 @@ public:
 	virtual ~IFrontend() {}
 };
 
-/* Frontend */
+
+
+/* Frontends */
 class BrainfuckFrontend : public IFrontend {
 public:
 	void applyOptions(char option, std::vector<std::string> &values);
