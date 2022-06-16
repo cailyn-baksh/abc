@@ -5,6 +5,8 @@
 #include <fstream>
 #include <stack>
 
+#include <iostream>
+
 #include "frontend.hpp"
 #include "ir.hpp"
 
@@ -93,6 +95,8 @@ std::vector<std::uint8_t> BrainfuckFrontend::parse(std::string &file) {
 				break;
 		}
 	}
+
+	std::cout << program;
 
 	return program.assemble();
 }

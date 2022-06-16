@@ -3,6 +3,7 @@
 
 #include <map>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <variant>
 #include <vector>
@@ -114,7 +115,7 @@ namespace IR {
 	};
 
 	/*
-	 * 
+	 * Operand size codes
 	 */
 	enum OperandSize {
 		BYTE	= 0b00,
@@ -179,6 +180,8 @@ namespace IR {
 		friend class _InstructionPtr;
 		friend class Program;
 
+		friend std::ostream &operator<<(std::ostream &os, Instruction &inst);
+
 	private:
 		Opcode opcode;
 
@@ -197,6 +200,8 @@ namespace IR {
 		 * Construct a new instruction with the given opcode
 		 */
 		Instruction(Opcode opcode);
+
+		operator std::string&() const;
 	};
 
 	/*
@@ -270,6 +275,7 @@ namespace IR {
 	 * assembly-like interface to create IR bytecode.
 	 */
 	class Program {
+		friend std::ostream &operator<<(std::ostream &os, Program &prog);
 	private:
 		std::vector<Instruction *> instructions;
 
@@ -304,6 +310,7 @@ namespace IR {
 		 * Instructions.
 		 */
 		std::vector<std::uint8_t> assemble();
+
 
 		~Program();
 	};

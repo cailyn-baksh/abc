@@ -259,6 +259,22 @@ namespace IR {
 		}
 	}
 
+	std::ostream &operator<<(std::ostream &os, Program &prog) {
+		for (IR::Instruction *instruction : prog.instructions) {
+			for (auto &[key, value] : prog.symTable) {
+				if (prog.instructions[value] == instruction) {  // pointer comparison not object comparison
+					// this symbol points to this instruction
+					os << key << ':' << std::endl;
+					break;
+				}
+			}
+
+			os << '\t' << *instruction << std::endl;
+		}
+
+		return os;
+	}
+
 
 	/*******************
 	 * _InstructionPtr *
@@ -357,6 +373,181 @@ namespace IR {
 		}
 	}
 
+	std::ostream &operator<<(std::ostream &os, Instruction &instruction) {
+		switch (instruction.opcode) {
+			case JMP:
+				os << "jmp ";
+				break;
+			case SUB:
+				os << "sub ";
+				break;
+			case ADD:
+				os << "add ";
+				break;
+			case MUL:
+				os << "mul ";
+				break;
+			case DIV:
+				os << "div ";
+				break;
+			case CMP:
+				os << "cmp ";
+				break;
+			case TST:
+				os << "tst ";
+				break;
+			case AND:
+				os << "and ";
+				break;
+			case OR:
+				os << "or ";
+				break;
+			case XOR:
+				os << "xor ";
+				break;
+			case CPL:
+				os << "cpl ";
+				break;
+			case LSL:
+				os << "lsl ";
+				break;
+			case LSR:
+				os << "lsr ";
+				break;
+			case ASR:
+				os << "asr ";
+				break;
+			case MOV:
+				os << "mov ";
+				break;
+			case CALL:
+				os << "call ";
+				break;
+		}
+
+		if (instruction.size) {
+			switch (*instruction.size) {
+				case BYTE:
+					os << "byte ";
+					break;
+				case HWORD:
+					os << "hword ";
+					break;
+				case WORD:
+					os << "word ";
+					break;
+				case DWORD:
+					os << "dword ";
+					break;
+			}
+		}
+
+		if (instruction.cc) {
+			switch (*instruction.cc) {
+				case AL:
+					os << "al,";
+					break;
+				case NV:
+					os << "nv,";  // this shouldnt be allowed
+					break;
+				case EQ:
+					os << "eq,";
+					break;
+				case NE:
+					os << "ne,";
+					break;
+				case CS:
+					os << "cs,";
+					break;
+				case CC:
+					os << "cc,";
+					break;
+				case MI:
+					os << "mi,";
+					break;
+				case PL:
+					os << "pl,";
+					break;
+				case VS:
+					os << "vs,";
+					break;
+				case VC:
+					os << "vc,";
+					break;
+				case HI:
+					os << "hi,";
+					break;
+				case LS:
+					os << "ls,";
+					break;
+				case GE:
+					os << "ge,";
+					break;
+				case LT:
+					os << "lt,";
+					break;
+				case GT:
+					os << "gt,";
+					break;
+				case LE:
+					os << "le,";
+					break;
+			}
+		}
+
+		std::optional<Operand> const *operands[2] = {&instruction.op1, &instruction.op2};
+
+		for (int i=0; i < 2; ++i) {
+			if (i > 0 && *operands[i] && *operands[i-1]) os << ',';  // add comma between operands
+
+			if (*operands[i]) {
+				if ((*operands[i])->type == Operand::REGISTER
+					 || (*operands[i])->type == Operand::INDIRECT) {
+
+					if ((*operands[i])->type == Operand::INDIRECT) {
+						os << '[';
+					}
+
+					switch (std::get<Register>((*operands[i])->value)) {
+						case R0:
+							os << "r0";
+							break;
+						case R1:
+							os << "r1";
+							break;
+						case R2:
+							os << "r2";
+							break;
+						case R3:
+							os << "r3";
+							break;
+						case R4:
+							os << "r4";
+							break;
+						case R5:
+							os << "r5";
+							break;
+						case R6:
+							os << "r6";
+							break;
+						case R7:
+							os << "r7";
+							break;
+					}
+
+					if ((*operands[i])->type == Operand::INDIRECT) {
+						os << ']';
+					}
+				} else if ((*operands[i])->type == Operand::SYMBOL) {
+					os << std::get<std::string>((*operands[i])->value);
+				} else if ((*operands[i])->type == Operand::LITERAL) {
+					os << std::get<std::uintmax_t>((*operands[i])->value);
+				}
+			}
+		}
+
+		return os;
+	}
 
 	/***********
 	 * Operand *
